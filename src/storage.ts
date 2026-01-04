@@ -5,6 +5,7 @@ const STORAGE_VERSION = 1;
 const STORAGE_KEY = 'kids-tasks-data';
 let memoryData: StorageData | null = null;
 let pendingInit: Promise<void> | null = null;
+const INIT_TIMEOUT_MS = 800;
 
 interface StorageData {
   version: number;
@@ -48,7 +49,10 @@ const defaultData: StorageData = {
 
 function ensureStore() {
   if (!pendingInit) {
-    pendingInit = localforage.ready().catch(err => {
+    pendingInit = Promise.race([
+      localforage.ready(),
+      new Promise<void>(resolve => setTimeout(resolve, INIT_TIMEOUT_MS)),
+    ]).catch(err => {
       console.warn('localforage init failed; falling back to memory/localStorage', err);
     });
   }
@@ -100,12 +104,18 @@ async function writeToStorage(data: StorageData) {
 }
 
 async function loadData(): Promise<StorageData> {
-  const stored = await readFromStorage();
-  if (!stored || stored.version !== STORAGE_VERSION) {
-    await writeToStorage(defaultData);
-    return cloneData(defaultData);
+  try {
+    const stored = await readFromStorage();
+    if (!stored || stored.version !== STORAGE_VERSION) {
+      await writeToStorage(defaultData);
+      return cloneData(defaultData);
+    }
+    return stored;
+  } catch (err) {
+    console.warn('loadData failed; using defaults in-memory', err);
+    memoryData = cloneData(defaultData);
+    return memoryData;
   }
-  return stored;
 }
 
 function saveData(data: StorageData) {

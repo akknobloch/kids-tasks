@@ -9,17 +9,26 @@ export default function KidsView() {
   const [kids, setKids] = useState<Awaited<ReturnType<typeof getKids>>>([]);
   const [tasks, setTasks] = useState<Awaited<ReturnType<typeof getTasks>>>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
-      setLoading(true);
-      const [k, t] = await Promise.all([getKids(), getTasks()]);
-      if (!mounted) return;
-      setKids(k);
-      setTasks(t);
-      setSelectedKidId(prev => prev && k.find(x => x.id === prev) ? prev : k[0]?.id || null);
-      setLoading(false);
+      try {
+        setLoading(true);
+        const [k, t] = await Promise.all([getKids(), getTasks()]);
+        if (!mounted) return;
+        setKids(k);
+        setTasks(t);
+        setSelectedKidId(prev => prev && k.find(x => x.id === prev) ? prev : k[0]?.id || null);
+        setError(null);
+      } catch (err) {
+        console.warn('Failed to load data', err);
+        if (!mounted) return;
+        setError('Unable to load data. Try reloading.');
+      } finally {
+        if (mounted) setLoading(false);
+      }
     })();
     return () => { mounted = false; };
   }, []);
@@ -46,7 +55,10 @@ export default function KidsView() {
       {loading && (
         <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">Loading...</div>
       )}
-      {!loading && kids.length > 0 && selectedKid && (
+      {error && !loading && (
+        <div className="flex-1 flex items-center justify-center text-red-600 text-sm text-center px-4">{error}</div>
+      )}
+      {!loading && !error && kids.length > 0 && selectedKid && (
         <>
           <KidSwitcher
             kids={kids}
