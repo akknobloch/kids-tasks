@@ -217,6 +217,12 @@ async function playChime() {
   }
 }
 
+function isOldSafari() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /Version\/12\./.test(ua) && /Safari/.test(ua) && !/Chrome|Chromium/.test(ua);
+}
+
 function spawnConfettiRain(color: string) {
   const container = document.createElement('div');
   container.style.position = 'fixed';
@@ -225,6 +231,8 @@ function spawnConfettiRain(color: string) {
   container.style.zIndex = '9999';
 
   const colors = [color || '#22c55e', '#ffffff', '#fbbf24', '#a5b4fc'];
+  const useJsFallback = isOldSafari();
+  const pieces: HTMLElement[] = [];
 
   for (let i = 0; i < 60; i++) {
     const piece = document.createElement('span');
@@ -237,15 +245,50 @@ function spawnConfettiRain(color: string) {
     piece.style.height = `${size * 1.4}px`;
     piece.style.backgroundColor = colors[i % colors.length];
     piece.style.opacity = '0.95';
-    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
     piece.style.borderRadius = '2px';
-    piece.style.animation = `confetti-rain ${900 + Math.random() * 900}ms cubic-bezier(0.25, 0.8, 0.25, 1) forwards`;
-    piece.style.animationDelay = `${Math.random() * 150}ms`;
+    if (useJsFallback) {
+      piece.dataset.vy = (4 + Math.random() * 6).toString();
+      piece.dataset.vx = (Math.random() * 4 - 2).toString();
+      piece.dataset.rot = (Math.random() * 360).toString();
+    } else {
+      piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+      piece.style.animation = `confetti-rain ${900 + Math.random() * 900}ms cubic-bezier(0.25, 0.8, 0.25, 1) forwards`;
+      piece.style.animationDelay = `${Math.random() * 150}ms`;
+    }
+    pieces.push(piece);
     container.appendChild(piece);
   }
 
   document.body.appendChild(container);
-  setTimeout(() => {
-    if (container.parentElement) container.parentElement.removeChild(container);
-  }, 1800);
+
+  if (useJsFallback) {
+    const start = performance.now();
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      for (const el of pieces) {
+        const vy = Number(el.dataset.vy || '0');
+        const vx = Number(el.dataset.vx || '0');
+        const rot = Number(el.dataset.rot || '0');
+        const top = parseFloat(el.style.top) || 0;
+        const left = parseFloat(el.style.left) || 0;
+        const newTop = top + vy * 0.6;
+        const newLeft = left + vx * 0.6;
+        const newRot = rot + 5;
+        el.style.top = `${newTop}%`;
+        el.style.left = `${newLeft}%`;
+        el.style.transform = `rotate(${newRot}deg)`;
+        el.dataset.rot = newRot.toString();
+      }
+      if (elapsed < 1600) {
+        requestAnimationFrame(tick);
+      } else {
+        if (container.parentElement) container.parentElement.removeChild(container);
+      }
+    };
+    requestAnimationFrame(tick);
+  } else {
+    setTimeout(() => {
+      if (container.parentElement) container.parentElement.removeChild(container);
+    }, 1800);
+  }
 }
