@@ -234,7 +234,6 @@ function spawnConfettiRain(color: string) {
   const useJsFallback = isOldSafari();
   const pieces: HTMLElement[] = [];
   const viewportWidth = window.innerWidth || 800;
-  const viewportHeight = window.innerHeight || 600;
 
   for (let i = 0; i < 60; i++) {
     const piece = document.createElement('span');
