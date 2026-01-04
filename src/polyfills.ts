@@ -1,7 +1,7 @@
 // Basic Web Animations API polyfill for browsers (like Safari 12) that lack Element.animate.
 declare global {
   interface Element {
-    animate?: typeof Element.prototype.animate;
+    animate(keyframes: Keyframe[] | PropertyIndexedKeyframes | null, options?: KeyframeAnimationOptions): Animation;
   }
 }
 
