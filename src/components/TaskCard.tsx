@@ -21,7 +21,7 @@ export default function TaskCard({ task }: TaskCardProps) {
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={style as any}
       {...listeners}
       {...attributes}
       className={`w-28 h-28 sm:w-32 sm:h-32 bg-white rounded-2xl shadow-lg flex flex-col items-center justify-center p-3 cursor-grab active:cursor-grabbing transition-transform border border-indigo-50 ${
