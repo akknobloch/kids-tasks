@@ -87,9 +87,9 @@ export default function TaskBoard({ kid, tasks }: TaskBoardProps) {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-h-0">
         <div className="soft-card rounded-3xl p-3 sm:p-4 flex-1 min-h-0 flex flex-col">
-          <div className="grid grid-cols-1 sm:grid-cols-2 grid-rows-1 auto-rows-fr gap-6 h-full min-h-0 items-stretch relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 h-full min-h-0 items-stretch relative">
             <div className="h-full min-h-0">
               <TaskColumn id="todo-column" title="To Do" tasks={todoTasks} accent="indigo" />
             </div>

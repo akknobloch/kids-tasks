@@ -11,7 +11,7 @@ function App() {
   return (
     <AuthGate>
       <div className="min-h-screen">
-        <div className="max-w-6xl mx-auto p-12 space-y-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-10 lg:py-12 space-y-4 sm:space-y-6 h-screen">
           <Routes>
             <Route path="/" element={<KidsView />} />
             <Route path="/admin/*" element={<AdminLayout />} />

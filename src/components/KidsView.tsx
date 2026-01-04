@@ -18,7 +18,7 @@ export default function KidsView() {
   });
 
   return (
-    <div className="flex flex-col gap-6 relative h-[calc(100vh-120px)] overflow-visible">
+    <div className="flex flex-col gap-4 sm:gap-6 relative h-full">
       <div className="flex justify-center">
         <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-500">
           {todayLabel}
@@ -29,7 +29,7 @@ export default function KidsView() {
         selectedKidId={selectedKid?.id || null}
         onSelectKid={setSelectedKidId}
       />
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-[260px]">
         <TaskBoard
           kid={selectedKid}
           tasks={tasks.filter(t => t.kidId === selectedKid.id && t.isActive)}
