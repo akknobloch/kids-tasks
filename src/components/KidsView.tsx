@@ -69,6 +69,9 @@ export default function KidsView() {
             <TaskBoard
               kid={selectedKid}
               tasks={tasks.filter(t => t.kidId === selectedKid.id && t.isActive)}
+              onTaskUpdate={(id, updates) => {
+                setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+              }}
             />
           </div>
         </>

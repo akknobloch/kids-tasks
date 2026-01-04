@@ -18,9 +18,10 @@ import confetti from 'canvas-confetti';
 interface TaskBoardProps {
   kid: Kid;
   tasks: Task[];
+  onTaskUpdate?: (id: string, updates: Partial<Task>) => void;
 }
 
-export default function TaskBoard({ kid, tasks }: TaskBoardProps) {
+export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [taskList, setTaskList] = useState<Task[]>(tasks);
   const sensors = useSensors(
@@ -59,18 +60,16 @@ export default function TaskBoard({ kid, tasks }: TaskBoardProps) {
     if (overId === 'done-column' && !task.isDone) {
       // Moved to done
       await updateTask(taskId, { isDone: true });
-      setTimeout(() => {
-        setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: true } : t));
-      }, 0);
+      setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: true } : t));
+      onTaskUpdate?.(taskId, { isDone: true });
       fireConfetti(kid.color);
     }
 
     if (overId === 'todo-column' && task.isDone) {
       // Moved back to todo
       await updateTask(taskId, { isDone: false });
-      setTimeout(() => {
-        setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: false } : t));
-      }, 0);
+      setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: false } : t));
+      onTaskUpdate?.(taskId, { isDone: false });
       rainEmojis('😭', kid.color);
     }
   };
