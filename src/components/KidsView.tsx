@@ -46,7 +46,7 @@ export default function KidsView() {
   });
 
   return (
-    <div className="flex flex-col space-y-4 sm:space-y-6 relative h-full">
+    <div className="flex flex-col space-y-3 sm:space-y-4 relative h-full">
       <div className="flex justify-center">
         <span className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-500">
           {todayLabel}

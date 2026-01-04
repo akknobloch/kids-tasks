@@ -83,11 +83,11 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
     >
       <div className="flex flex-col h-full min-h-0">
         <div className="soft-card rounded-3xl p-3 sm:p-4 flex-1 min-h-0 flex flex-col">
-          <div className="h-full min-h-0 flex flex-col sm:flex-row sm:space-x-6 space-y-6 sm:space-y-0 items-stretch relative">
-            <div className="h-full min-h-0 sm:flex-1">
+          <div className="h-full min-h-0 flex flex-col sm:flex-row space-y-6 sm:space-y-0 items-stretch relative">
+            <div className="h-full min-h-0 w-full sm:w-1/2 sm:px-3">
               <TaskColumn id="todo-column" title="To Do" tasks={todoTasks} accent="indigo" />
             </div>
-            <div className="h-full min-h-0 sm:flex-1">
+            <div className="h-full min-h-0 w-full sm:w-1/2 sm:px-3">
               <TaskColumn id="done-column" title="Done" tasks={doneTasks} accent="emerald" />
             </div>
             <div className="hidden sm:block absolute inset-y-0 left-1/2 -translate-x-1/2 pointer-events-none px-3">
@@ -147,6 +147,11 @@ function ensureEmojiStyles() {
 }
 
 function fireConfetti(color: string) {
+  if (isOldSafari()) {
+    simpleConfettiFallback(color);
+    return;
+  }
+
   try {
     confetti({
       particleCount: 70,
@@ -160,5 +165,59 @@ function fireConfetti(color: string) {
     });
   } catch (err) {
     console.warn('Confetti not available', err);
+    simpleConfettiFallback(color);
   }
+}
+
+function isOldSafari() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /Version\/12\./.test(ua) && /Safari/.test(ua) && !/Chrome|Chromium/.test(ua);
+}
+
+function simpleConfettiFallback(color: string) {
+  ensureConfettiStyles();
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.inset = '0';
+  container.style.pointerEvents = 'none';
+  container.style.zIndex = '9999';
+
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('span');
+    piece.className = 'confetti-piece';
+    piece.style.backgroundColor = i % 3 === 0 ? '#ffffff' : color;
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.animationDelay = `${Math.random() * 100}ms`;
+    piece.style.transform = `scale(${0.6 + Math.random() * 0.8}) rotate(${Math.random() * 360}deg)`;
+    container.appendChild(piece);
+  }
+
+  document.body.appendChild(container);
+  setTimeout(() => {
+    document.body.removeChild(container);
+  }, 1200);
+}
+
+function ensureConfettiStyles() {
+  if (document.getElementById('confetti-fallback-style')) return;
+  const style = document.createElement('style');
+  style.id = 'confetti-fallback-style';
+  style.textContent = `
+    .confetti-piece {
+      position: absolute;
+      top: 50%;
+      width: 8px;
+      height: 14px;
+      border-radius: 2px;
+      opacity: 0.9;
+      animation: confetti-pop 900ms ease-out forwards;
+    }
+    @keyframes confetti-pop {
+      0% { transform: translate3d(0,0,0) scale(0.8) rotate(0deg); opacity: 0.9; }
+      60% { transform: translate3d(10px, -160px, 0) scale(1) rotate(120deg); opacity: 1; }
+      100% { transform: translate3d(20px, -280px, 0) scale(0.9) rotate(260deg); opacity: 0; }
+    }
+  `;
+  document.head.appendChild(style);
 }

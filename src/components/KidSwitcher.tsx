@@ -11,8 +11,8 @@ export default function KidSwitcher({ kids, selectedKidId, onSelectKid, size = '
   const circleSize = size === 'compact' ? 'w-14 h-14 sm:w-16 sm:h-16' : 'w-20 h-20 sm:w-24 sm:h-24';
   const labelWidth = size === 'compact' ? 'w-14 sm:w-16 text-xs sm:text-sm' : 'w-20 sm:w-24 text-sm';
   const ringOffset = size === 'compact' ? 'ring-offset-3' : 'ring-offset-4';
-  const itemMargin = size === 'compact' ? 'mx-3 my-3 sm:mx-4 sm:my-4' : 'mx-4 my-4 sm:mx-6 sm:my-6';
-  const wrapMargin = size === 'compact' ? '-mx-3 -my-3 sm:-mx-4 sm:-my-4' : '-mx-4 -my-4 sm:-mx-6 sm:-my-6';
+  const itemMargin = size === 'compact' ? 'mx-2 my-2 sm:mx-3 sm:my-3' : 'mx-2 my-2 sm:mx-3 sm:my-3';
+  const wrapMargin = size === 'compact' ? '-mx-2 -my-2 sm:-mx-3 sm:-my-3' : '-mx-2 -my-2 sm:-mx-3 sm:-my-3';
 
   return (
     <div className={`flex flex-wrap justify-center ${wrapMargin}`}>
