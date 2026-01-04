@@ -1,7 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 
 const AUTH_KEY = 'kids-tasks-auth';
-const APP_PASSWORD = (import.meta.env.VITE_APP_PASSWORD as string | undefined)?.trim();
 
 interface AuthGateProps {
   children: ReactNode;
@@ -11,28 +10,39 @@ export default function AuthGate({ children }: AuthGateProps) {
   const [authed, setAuthed] = useState(false);
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!APP_PASSWORD) {
-      setAuthed(true); // No password configured, skip gate
-      return;
-    }
     const stored = localStorage.getItem(AUTH_KEY);
     if (stored === 'ok') setAuthed(true);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!APP_PASSWORD) {
-      setAuthed(true);
-      return;
-    }
-    if (input.trim() === APP_PASSWORD) {
-      localStorage.setItem(AUTH_KEY, 'ok');
-      setAuthed(true);
-      setError('');
-    } else {
-      setError('Incorrect password');
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: input.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        localStorage.setItem(AUTH_KEY, 'ok');
+        setAuthed(true);
+      } else {
+        setError(data.error || 'Authentication failed');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,9 +74,10 @@ export default function AuthGate({ children }: AuthGateProps) {
           {error && <div className="text-sm text-red-600">{error}</div>}
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            disabled={loading}
+            className="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Enter
+            {loading ? 'Checking...' : 'Enter'}
           </button>
         </form>
       </div>

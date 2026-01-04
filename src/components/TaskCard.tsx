@@ -10,9 +10,13 @@ export default function TaskCard({ task }: TaskCardProps) {
     id: task.id,
   });
 
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  } : undefined;
+  const style = {
+    touchAction: 'none',
+    WebkitTouchCallout: 'none',
+    ...(transform
+      ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
+      : undefined),
+  };
 
   return (
     <div

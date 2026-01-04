@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react';
-import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  MouseSensor,
+  TouchSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import type { Kid, Task } from '../types';
 import { updateTask } from '../storage';
 import TaskColumn from './TaskColumn';
 import TaskCard from './TaskCard';
-import confetti from 'canvas-confetti';
+// import confetti from 'canvas-confetti';
 
 interface TaskBoardProps {
   kid: Kid;
@@ -15,7 +23,15 @@ interface TaskBoardProps {
 export default function TaskBoard({ kid, tasks }: TaskBoardProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [taskList, setTaskList] = useState<Task[]>(tasks);
-  const [emojiStyleAdded, setEmojiStyleAdded] = useState(false);
+  const sensors = useSensors(
+    useSensor(MouseSensor),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 75,
+        tolerance: 8,
+      },
+    }),
+  );
 
   useEffect(() => {
     setTaskList(tasks);
@@ -43,32 +59,37 @@ export default function TaskBoard({ kid, tasks }: TaskBoardProps) {
     if (overId === 'done-column' && !task.isDone) {
       // Moved to done
       updateTask(taskId, { isDone: true });
-      setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: true } : t));
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: [kid.color],
-      });
+      setTimeout(() => {
+        setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: true } : t));
+      }, 0);
+      // confetti({
+      //   particleCount: 50,
+      //   spread: 30,
+      //   origin: { x: 0.5, y: 0.5 },
+      //   colors: [kid.color],
+      // });
     }
 
     if (overId === 'todo-column' && task.isDone) {
       // Moved back to todo
       updateTask(taskId, { isDone: false });
-      setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: false } : t));
-      rainEmojis('😭', kid.color, setEmojiStyleAdded);
+      setTimeout(() => {
+        setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: false } : t));
+      }, 0);
+      rainEmojis('😭', kid.color);
     }
   };
 
   return (
     <DndContext
+      sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       <div className="flex flex-col h-full">
-        <div className="soft-card rounded-3xl p-4 sm:p-6 flex-1 min-h-0 flex flex-col">
-          <div className="grid grid-cols-1 sm:grid-cols-2 grid-rows-1 auto-rows-fr gap-14 h-full min-h-0 items-stretch relative">
+        <div className="soft-card rounded-3xl p-3 sm:p-4 flex-1 min-h-0 flex flex-col">
+          <div className="grid grid-cols-1 sm:grid-cols-2 grid-rows-1 auto-rows-fr gap-6 h-full min-h-0 items-stretch relative">
             <div className="h-full min-h-0">
               <TaskColumn id="todo-column" title="To Do" tasks={todoTasks} accent="indigo" />
             </div>
@@ -92,8 +113,8 @@ export default function TaskBoard({ kid, tasks }: TaskBoardProps) {
   );
 }
 
-function rainEmojis(emoji: string, tint: string, setStyleFlag: (added: boolean) => void) {
-  ensureEmojiStyles(setStyleFlag);
+function rainEmojis(emoji: string, tint: string) {
+  ensureEmojiStyles();
   const container = document.createElement('div');
   container.style.position = 'fixed';
   container.style.pointerEvents = 'none';
@@ -118,7 +139,7 @@ function rainEmojis(emoji: string, tint: string, setStyleFlag: (added: boolean) 
   }, 2200);
 }
 
-function ensureEmojiStyles(setStyleFlag: (added: boolean) => void) {
+function ensureEmojiStyles() {
   if (document.getElementById('emoji-fall-style')) return;
   const style = document.createElement('style');
   style.id = 'emoji-fall-style';
@@ -129,5 +150,4 @@ function ensureEmojiStyles(setStyleFlag: (added: boolean) => void) {
     }
   `;
   document.head.appendChild(style);
-  setStyleFlag(true);
 }
