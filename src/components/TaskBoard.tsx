@@ -156,6 +156,33 @@ function ensureEmojiStyles() {
 
 let audioCtx: AudioContext | null = null;
 let audioUnlocked = false;
+let unlockListenerAttached = false;
+
+function ensureAudioUnlock() {
+  if (unlockListenerAttached || typeof window === 'undefined') return;
+  unlockListenerAttached = true;
+  const attempt = () => {
+    if (!audioCtx) {
+      const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
+      audioCtx = Ctx ? new Ctx() : null;
+    }
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended' && audioCtx.resume) {
+      audioCtx.resume();
+    }
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0.0001;
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(0);
+    osc.stop(audioCtx.currentTime + 0.01);
+    audioUnlocked = true;
+    window.removeEventListener('pointerdown', attempt);
+    window.removeEventListener('touchstart', attempt);
+  };
+  window.addEventListener('pointerdown', attempt, { once: true, passive: true });
+  window.addEventListener('touchstart', attempt, { once: true, passive: true });
+}
 
 async function playChime() {
   try {
@@ -170,16 +197,7 @@ async function playChime() {
       await ctx.resume();
     }
 
-    // Attempt to unlock audio on first call with a silent click.
-    if (!audioUnlocked) {
-      const unlockOsc = ctx.createOscillator();
-      const unlockGain = ctx.createGain();
-      unlockGain.gain.value = 0.0001;
-      unlockOsc.connect(unlockGain).connect(ctx.destination);
-      unlockOsc.start(0);
-      unlockOsc.stop(ctx.currentTime + 0.01);
-      audioUnlocked = true;
-    }
+    ensureAudioUnlock();
 
     const now = ctx.currentTime;
     const base = 523.25; // C5
@@ -265,34 +283,64 @@ function spawnConfettiRain(color: string) {
   document.body.appendChild(container);
 
   if (useJsFallback) {
-    const start = performance.now();
-    const tick = (now: number) => {
-      const elapsed = now - start;
-      for (const el of pieces) {
-        const vy = Number(el.dataset.vy || '0'); // px/s
-        const vx = Number(el.dataset.vx || '0'); // px/s
-        const rot = Number(el.dataset.rot || '0');
-        const top = parseFloat(el.style.top) || 0;
-        const left = parseFloat(el.style.left) || 0;
-        const dt = 16; // approx ms per frame
-        const newTop = top + (vy * (dt / 1000));
-        const newLeft = left + (vx * (dt / 1000));
-        const newRot = rot + 6;
-        el.style.top = `${newTop}px`;
-        el.style.left = `${newLeft}px`;
-        el.style.transform = `rotate(${newRot}deg)`;
-        el.dataset.rot = newRot.toString();
-      }
-      if (elapsed < 1600) {
-        requestAnimationFrame(tick);
-      } else {
-        if (container.parentElement) container.parentElement.removeChild(container);
-      }
-    };
-    requestAnimationFrame(tick);
+    runCanvasConfettiFallback(colors, container);
   } else {
     setTimeout(() => {
       if (container.parentElement) container.parentElement.removeChild(container);
     }, 1800);
   }
+}
+
+function runCanvasConfettiFallback(colors: string[], container: HTMLElement) {
+  const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth || 800;
+  canvas.height = window.innerHeight || 600;
+  canvas.style.position = 'fixed';
+  canvas.style.inset = '0';
+  canvas.style.pointerEvents = 'none';
+  canvas.style.zIndex = '10000';
+  container.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const pieces = Array.from({ length: 70 }).map(() => ({
+    x: Math.random() * canvas.width,
+    y: -Math.random() * 80,
+    w: 6 + Math.random() * 8,
+    h: 10 + Math.random() * 10,
+    vx: (Math.random() * 160 - 80) / 1000, // px/ms
+    vy: (200 + Math.random() * 240) / 1000,
+    rot: Math.random() * Math.PI * 2,
+    vr: (Math.random() * 6 - 3) * (Math.PI / 180),
+    color: colors[Math.floor(Math.random() * colors.length)],
+  }));
+
+  const start = performance.now();
+  const duration = 1600;
+
+  function frame(now: number) {
+    const elapsed = now - start;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const p of pieces) {
+      p.x += p.vx * 16;
+      p.y += p.vy * 16;
+      p.rot += p.vr;
+      if (p.y > canvas.height + 40) p.y = -20;
+      if (p.x > canvas.width + 40) p.x = -20;
+      if (p.x < -40) p.x = canvas.width + 20;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+    if (elapsed < duration) {
+      requestAnimationFrame(frame);
+    } else if (canvas.parentElement) {
+      canvas.parentElement.removeChild(canvas);
+    }
+  }
+  requestAnimationFrame(frame);
 }
