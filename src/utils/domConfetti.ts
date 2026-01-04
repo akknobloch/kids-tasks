@@ -69,9 +69,9 @@ export function launchConfetti(options: ConfettiOptions = {}) {
     return el;
   });
 
-  const gravity = 0.5;
-  const drag = 0.995;
-  const decay = 0.015;
+  const gravity = 0.9;
+  const drag = 0.99;
+  const decay = 0.02;
   let frame = 0;
 
   function animate() {
