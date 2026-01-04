@@ -48,9 +48,15 @@ export default function KidsView() {
   return (
     <div className="flex flex-col space-y-3 sm:space-y-4 relative h-full">
       <div className="flex justify-center">
-        <span className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-500">
-          {todayLabel}
-        </span>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-500 cursor-pointer hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200"
+          aria-label="Refresh tasks"
+        >
+          <span>{todayLabel}</span>
+          <span role="img" aria-hidden="true">🔄</span>
+        </button>
       </div>
       {loading && (
         <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">Loading...</div>
