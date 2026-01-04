@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 
 const AUTH_KEY = 'kids-tasks-auth';
+const TOKEN_KEY = 'kids-tasks-token';
 
 interface AuthGateProps {
   children: ReactNode;
@@ -33,7 +34,8 @@ export default function AuthGate({ children }: AuthGateProps) {
 
   useEffect(() => {
     const stored = safeGet(AUTH_KEY);
-    if (stored === 'ok') setAuthed(true);
+    const token = safeGet(TOKEN_KEY);
+    if (stored === 'ok' && token) setAuthed(true);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,8 +54,9 @@ export default function AuthGate({ children }: AuthGateProps) {
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (response.ok && data.success && data.token) {
         safeSet(AUTH_KEY, 'ok');
+        safeSet(TOKEN_KEY, data.token);
         setAuthed(true);
       } else {
         setError(data.error || 'Authentication failed');

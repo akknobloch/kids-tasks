@@ -1,4 +1,10 @@
+import crypto from 'crypto';
+
 const APP_PASSWORD = process.env.APP_PASSWORD;
+
+function makeToken(secret) {
+  return crypto.createHash('sha256').update(secret || 'open-access').digest('hex');
+}
 
 export default function handler(req, res) {
   if (req.method !== 'POST') {
@@ -7,14 +13,11 @@ export default function handler(req, res) {
 
   const { password } = req.body;
 
-  if (!APP_PASSWORD) {
-    // No password set, allow access
-    return res.status(200).json({ success: true });
+  const expected = APP_PASSWORD || '';
+
+  if (!expected || password === expected) {
+    return res.status(200).json({ success: true, token: makeToken(expected) });
   }
 
-  if (password === APP_PASSWORD) {
-    return res.status(200).json({ success: true });
-  } else {
-    return res.status(401).json({ error: 'Incorrect password' });
-  }
+  return res.status(401).json({ error: 'Incorrect password' });
 }
