@@ -70,13 +70,13 @@ export default function KidForm({ kid, onSubmit, onCancel }: KidFormProps) {
           </div>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
-            <div className="grid grid-cols-6 gap-2">
+            <div className="flex flex-wrap wrap-spacing-2">
               {paletteWithCurrent.map((swatch) => (
                 <button
                   key={swatch}
                   type="button"
                   onClick={() => setColor(swatch)}
-                  className={`h-10 w-full rounded-md border-2 transition ${
+                  className={`h-10 w-12 flex-1 min-w-[3rem] rounded-md border-2 transition ${
                     color === swatch ? 'border-gray-900 ring-2 ring-offset-2 ring-gray-900' : 'border-white shadow-sm'
                   }`}
                   style={{ backgroundColor: swatch }}

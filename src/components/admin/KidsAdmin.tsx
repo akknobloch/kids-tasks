@@ -62,37 +62,39 @@ export default function KidsAdmin() {
           Add Kid
         </button>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="flex flex-wrap -m-2">
         {kids.map(kid => (
-          <div key={kid.id} className="p-4 rounded-xl flex items-center justify-between bg-white border border-gray-100 shadow-sm hover:shadow transition">
-            <div className="flex items-center space-x-3">
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                style={{ backgroundColor: kid.color }}
-              >
-                {kid.photoDataUrl ? (
-                  <img src={kid.photoDataUrl} alt={kid.name} className="w-full h-full rounded-full object-cover" />
-                ) : (
-                  kid.name[0]
-                )}
+          <div key={kid.id} className="w-full md:w-1/2 lg:w-1/3 p-2">
+            <div className="p-4 rounded-xl flex items-center justify-between bg-white border border-gray-100 shadow-sm hover:shadow transition h-full">
+              <div className="flex items-center space-x-3">
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
+                  style={{ backgroundColor: kid.color }}
+                >
+                  {kid.photoDataUrl ? (
+                    <img src={kid.photoDataUrl} alt={kid.name} className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    kid.name[0]
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-medium">{kid.name}</h3>
+                </div>
               </div>
-              <div>
-                <h3 className="font-medium">{kid.name}</h3>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => handleEdit(kid)}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(kid)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  Delete
+                </button>
               </div>
-            </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => handleEdit(kid)}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(kid)}
-                className="text-red-600 hover:text-red-800"
-              >
-                Delete
-              </button>
             </div>
           </div>
         ))}

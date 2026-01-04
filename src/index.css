@@ -7,3 +7,29 @@ body {
   margin: 0;
   background-color: transparent;
 }
+
+/* Gap-free spacing helpers for Safari 12 */
+.wrap-spacing-2 {
+  margin: -0.5rem;
+}
+.wrap-spacing-2 > * {
+  margin: 0.5rem;
+}
+.wrap-spacing-3 {
+  margin: -0.75rem;
+}
+.wrap-spacing-3 > * {
+  margin: 0.75rem;
+}
+.wrap-spacing-4 {
+  margin: -1rem;
+}
+.wrap-spacing-4 > * {
+  margin: 1rem;
+}
+.wrap-spacing-6 {
+  margin: -1.5rem;
+}
+.wrap-spacing-6 > * {
+  margin: 1.5rem;
+}

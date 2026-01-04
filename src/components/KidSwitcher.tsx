@@ -10,16 +10,17 @@ interface KidSwitcherProps {
 export default function KidSwitcher({ kids, selectedKidId, onSelectKid, size = 'default' }: KidSwitcherProps) {
   const circleSize = size === 'compact' ? 'w-14 h-14 sm:w-16 sm:h-16' : 'w-20 h-20 sm:w-24 sm:h-24';
   const labelWidth = size === 'compact' ? 'w-14 sm:w-16 text-xs sm:text-sm' : 'w-20 sm:w-24 text-sm';
-  const gap = size === 'compact' ? 'gap-3 sm:gap-4' : 'gap-4 sm:gap-6';
   const ringOffset = size === 'compact' ? 'ring-offset-3' : 'ring-offset-4';
+  const itemMargin = size === 'compact' ? 'mx-3 my-3 sm:mx-4 sm:my-4' : 'mx-4 my-4 sm:mx-6 sm:my-6';
+  const wrapMargin = size === 'compact' ? '-mx-3 -my-3 sm:-mx-4 sm:-my-4' : '-mx-4 -my-4 sm:-mx-6 sm:-my-6';
 
   return (
-    <div className={`flex flex-wrap justify-center ${gap}`}>
+    <div className={`flex flex-wrap justify-center ${wrapMargin}`}>
       {kids.map(kid => (
         <button
           key={kid.id}
           onClick={() => onSelectKid(kid.id)}
-          className={`relative ${circleSize} rounded-full border-4 transition-all duration-200 shadow-xl overflow-hidden focus:outline-none ${
+          className={`relative ${circleSize} ${itemMargin} rounded-full border-4 transition-all duration-200 shadow-xl overflow-hidden focus:outline-none ${
             selectedKidId === kid.id
               ? `ring-4 ${ringOffset} ring-indigo-300 shadow-2xl scale-110`
               : 'ring-2 ring-transparent opacity-60 hover:opacity-100'
@@ -36,9 +37,9 @@ export default function KidSwitcher({ kids, selectedKidId, onSelectKid, size = '
           )}
         </button>
       ))}
-      <div className={`w-full flex flex-wrap justify-center ${gap} font-semibold text-slate-800 -mt-1 sm:-mt-2`}>
+      <div className={`w-full flex flex-wrap justify-center ${wrapMargin} font-semibold text-slate-800 -mt-1 sm:-mt-2`}>
         {kids.map(kid => (
-          <div key={`${kid.id}-label`} className={`${labelWidth} text-center leading-tight`}>
+          <div key={`${kid.id}-label`} className={`${labelWidth} ${itemMargin} text-center leading-tight`}>
             {kid.name}
           </div>
         ))}

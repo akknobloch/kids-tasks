@@ -35,7 +35,7 @@ export default function EmojiSelect({ value, onChange }: EmojiSelectProps) {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-2 border border-gray-300 rounded-md px-3 py-2 text-sm bg-white shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+        className="flex items-center space-x-2 border border-gray-300 rounded-md px-3 py-2 text-sm bg-white shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
       >
         <span className="text-xl">{value || '🙂'}</span>
         <span className="text-gray-600">Choose emoji</span>

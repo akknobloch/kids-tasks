@@ -74,10 +74,10 @@ export default function SortableTaskItem({ task, onUpdate, onDelete, onToggleAct
     <li
       ref={setNodeRef}
       style={style}
-      className={`bg-white p-4 rounded-lg shadow flex flex-col gap-3 ${isDragging ? 'opacity-50' : ''}`}
+      className={`bg-white p-4 rounded-lg shadow flex flex-col space-y-3 ${isDragging ? 'opacity-50' : ''}`}
     >
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
           <label className="flex items-center">
             <span className="sr-only">Active</span>
             <input
@@ -95,7 +95,7 @@ export default function SortableTaskItem({ task, onUpdate, onDelete, onToggleAct
         <div className="flex-1 space-y-2">
           {isEditing ? (
             <>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center wrap-spacing-3">
                 <select
                   value={iconType}
                   onChange={(e) => setIconType(e.target.value as 'emoji' | 'image')}
@@ -108,7 +108,7 @@ export default function SortableTaskItem({ task, onUpdate, onDelete, onToggleAct
               {iconType === 'emoji' ? (
                 <EmojiSelect value={iconValue} onChange={setIconValue} />
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center space-x-2">
                   <input
                     type="file"
                     accept="image/*"
@@ -129,7 +129,7 @@ export default function SortableTaskItem({ task, onUpdate, onDelete, onToggleAct
             <button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-3 text-left w-full focus:outline-none"
+              className="flex items-center space-x-3 text-left w-full focus:outline-none"
             >
               <div className="text-2xl">
                 {task.iconType === 'emoji' ? task.iconValue : <img src={task.iconValue} alt="" className="w-8 h-8" />}
@@ -140,8 +140,8 @@ export default function SortableTaskItem({ task, onUpdate, onDelete, onToggleAct
             </button>
           )}
         </div>
-        <div className="flex flex-col justify-between items-end gap-2">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col justify-between items-end space-y-2">
+          <div className="flex items-center space-x-3">
             {!isEditing && (
               <button onClick={() => setIsEditing(true)} className="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
             )}
@@ -150,7 +150,7 @@ export default function SortableTaskItem({ task, onUpdate, onDelete, onToggleAct
             )}
           </div>
           {isEditing && (
-            <div className="flex gap-2">
+            <div className="flex space-x-2">
               <button onClick={handleSave} className="text-blue-600 hover:text-blue-800 text-sm font-semibold">Save</button>
               <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700 text-sm">Cancel</button>
             </div>

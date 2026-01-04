@@ -83,11 +83,11 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
     >
       <div className="flex flex-col h-full min-h-0">
         <div className="soft-card rounded-3xl p-3 sm:p-4 flex-1 min-h-0 flex flex-col">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 h-full min-h-0 items-stretch relative">
-            <div className="h-full min-h-0">
+          <div className="h-full min-h-0 flex flex-col sm:flex-row sm:space-x-6 space-y-6 sm:space-y-0 items-stretch relative">
+            <div className="h-full min-h-0 sm:flex-1">
               <TaskColumn id="todo-column" title="To Do" tasks={todoTasks} accent="indigo" />
             </div>
-            <div className="h-full min-h-0">
+            <div className="h-full min-h-0 sm:flex-1">
               <TaskColumn id="done-column" title="Done" tasks={doneTasks} accent="emerald" />
             </div>
             <div className="hidden sm:block absolute inset-y-0 left-1/2 -translate-x-1/2 pointer-events-none px-3">
@@ -100,7 +100,7 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
           </div>
         </div>
       </div>
-      <DragOverlay>
+      <DragOverlay dropAnimation={null}>
         {activeTask ? <TaskCard task={activeTask} /> : null}
       </DragOverlay>
     </DndContext>
