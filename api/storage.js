@@ -17,6 +17,7 @@ function requireAuth(req, res) {
 }
 
 async function ensureTables() {
+  // Create tables if they don't exist
   await sql`CREATE TABLE IF NOT EXISTS kids (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -39,6 +40,22 @@ async function ensureTables() {
     key TEXT PRIMARY KEY,
     value TEXT
   );`;
+
+  // Ensure columns exist on existing tables (handles previous schema versions)
+  await sql`ALTER TABLE kids ADD COLUMN IF NOT EXISTS photo_data_url TEXT DEFAULT '';`;
+  await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS kid_id TEXT REFERENCES kids(id) ON DELETE CASCADE;`;
+  await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS title TEXT;`;
+  await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS icon_type TEXT;`;
+  await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS icon_value TEXT;`;
+  await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS "order" INTEGER DEFAULT 1;`;
+  await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS is_done BOOLEAN DEFAULT FALSE;`;
+  await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;`;
+
+  // Normalize any nulls from older rows
+  await sql`UPDATE kids SET photo_data_url = '' WHERE photo_data_url IS NULL;`;
+  await sql`UPDATE tasks SET is_done = FALSE WHERE is_done IS NULL;`;
+  await sql`UPDATE tasks SET is_active = TRUE WHERE is_active IS NULL;`;
+  await sql`UPDATE tasks SET "order" = 1 WHERE "order" IS NULL;`;
 }
 
 async function seedIfEmpty() {
