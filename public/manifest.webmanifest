@@ -1,0 +1,15 @@
+{
+  "name": "Kids Tasks",
+  "short_name": "KidsTasks",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/checklist.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
