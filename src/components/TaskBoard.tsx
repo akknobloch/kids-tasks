@@ -13,7 +13,7 @@ import type { Kid, Task } from '../types';
 import { updateTask } from '../storage';
 import TaskColumn from './TaskColumn';
 import TaskCard from './TaskCard';
-// import confetti from 'canvas-confetti';
+import confetti from 'canvas-confetti';
 
 interface TaskBoardProps {
   kid: Kid;
@@ -45,7 +45,7 @@ export default function TaskBoard({ kid, tasks }: TaskBoardProps) {
     setActiveTask(task || null);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     setActiveTask(null);
     const { active, over } = event;
     if (!over) return;
@@ -58,21 +58,16 @@ export default function TaskBoard({ kid, tasks }: TaskBoardProps) {
 
     if (overId === 'done-column' && !task.isDone) {
       // Moved to done
-      updateTask(taskId, { isDone: true });
+      await updateTask(taskId, { isDone: true });
       setTimeout(() => {
         setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: true } : t));
       }, 0);
-      // confetti({
-      //   particleCount: 50,
-      //   spread: 30,
-      //   origin: { x: 0.5, y: 0.5 },
-      //   colors: [kid.color],
-      // });
+      fireConfetti(kid.color);
     }
 
     if (overId === 'todo-column' && task.isDone) {
       // Moved back to todo
-      updateTask(taskId, { isDone: false });
+      await updateTask(taskId, { isDone: false });
       setTimeout(() => {
         setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: false } : t));
       }, 0);
@@ -150,4 +145,21 @@ function ensureEmojiStyles() {
     }
   `;
   document.head.appendChild(style);
+}
+
+function fireConfetti(color: string) {
+  try {
+    confetti({
+      particleCount: 70,
+      spread: 80,
+      gravity: 0.9,
+      origin: { x: 0.5, y: 0.5 },
+      colors: [color, '#ffffff'],
+      ticks: 200,
+      scalar: 0.9,
+      disableForReducedMotion: true,
+    });
+  } catch (err) {
+    console.warn('Confetti not available', err);
+  }
 }

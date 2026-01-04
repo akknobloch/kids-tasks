@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getKids, getTasks } from '../storage';
 import KidSwitcher from './KidSwitcher';
@@ -6,10 +6,29 @@ import TaskBoard from './TaskBoard';
 
 export default function KidsView() {
   const [selectedKidId, setSelectedKidId] = useState<string | null>(null);
-  const kids = getKids();
-  const tasks = getTasks();
+  const [kids, setKids] = useState<Awaited<ReturnType<typeof getKids>>>([]);
+  const [tasks, setTasks] = useState<Awaited<ReturnType<typeof getTasks>>>([]);
+  const [loading, setLoading] = useState(true);
 
-  const selectedKid = kids.find(k => k.id === selectedKidId) || kids[0];
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoading(true);
+      const [k, t] = await Promise.all([getKids(), getTasks()]);
+      if (!mounted) return;
+      setKids(k);
+      setTasks(t);
+      setSelectedKidId(prev => prev && k.find(x => x.id === prev) ? prev : k[0]?.id || null);
+      setLoading(false);
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  const selectedKid = useMemo(
+    () => kids.find(k => k.id === selectedKidId) || kids[0],
+    [kids, selectedKidId],
+  );
+
   const todayLabel = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -24,17 +43,24 @@ export default function KidsView() {
           {todayLabel}
         </span>
       </div>
-      <KidSwitcher
-        kids={kids}
-        selectedKidId={selectedKid?.id || null}
-        onSelectKid={setSelectedKidId}
-      />
-      <div className="flex-1 min-h-[260px]">
-        <TaskBoard
-          kid={selectedKid}
-          tasks={tasks.filter(t => t.kidId === selectedKid.id && t.isActive)}
-        />
-      </div>
+      {loading && (
+        <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">Loading...</div>
+      )}
+      {!loading && kids.length > 0 && selectedKid && (
+        <>
+          <KidSwitcher
+            kids={kids}
+            selectedKidId={selectedKid?.id || null}
+            onSelectKid={setSelectedKidId}
+          />
+          <div className="flex-1 min-h-[260px]">
+            <TaskBoard
+              kid={selectedKid}
+              tasks={tasks.filter(t => t.kidId === selectedKid.id && t.isActive)}
+            />
+          </div>
+        </>
+      )}
       <Link
         to="/admin"
         aria-label="Open admin"

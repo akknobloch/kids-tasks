@@ -9,26 +9,29 @@ import SortableTaskItem from './SortableTaskItem';
 import KidSwitcher from '../KidSwitcher';
 
 export default function TasksAdmin() {
-  const kids = getKids();
-  const [selectedKidId, setSelectedKidId] = useState<string | null>(kids[0]?.id || null);
-  const [allTasks, setAllTasks] = useState<Task[]>(getTasks());
+  const [kids, setKids] = useState<Awaited<ReturnType<typeof getKids>>>([]);
+  const [selectedKidId, setSelectedKidId] = useState<string | null>(null);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [showForm, setShowForm] = useState(false);
 
   const selectedKid = kids.find(k => k.id === selectedKidId);
   const tasks = selectedKid ? allTasks.filter(t => t.kidId === selectedKid.id).sort((a, b) => a.order - b.order) : [];
 
   useEffect(() => {
-    if (!kids.length) {
-      setSelectedKidId(null);
-      return;
-    }
-    if (!selectedKidId || !kids.find(k => k.id === selectedKidId)) {
-      setSelectedKidId(kids[0].id);
-    }
-  }, [kids, selectedKidId]);
+    let mounted = true;
+    (async () => {
+      const [k, t] = await Promise.all([getKids(), getTasks()]);
+      if (!mounted) return;
+      setKids(k);
+      setAllTasks(t);
+      setSelectedKidId(prev => prev && k.find(x => x.id === prev) ? prev : k[0]?.id || null);
+    })();
+    return () => { mounted = false; };
+  }, []);
 
-  const refreshTasks = () => {
-    setAllTasks(getTasks());
+  const refreshTasks = async () => {
+    const updated = await getTasks();
+    setAllTasks(updated);
   };
 
   const handleAdd = () => {
@@ -36,28 +39,28 @@ export default function TasksAdmin() {
     setShowForm(true);
   };
 
-  const handleDelete = (task: Task) => {
-    deleteTask(task.id);
-    refreshTasks();
+  const handleDelete = async (task: Task) => {
+    await deleteTask(task.id);
+    await refreshTasks();
   };
 
-  const handleToggleActive = (task: Task) => {
-    updateTask(task.id, { isActive: !task.isActive });
-    refreshTasks();
+  const handleToggleActive = async (task: Task) => {
+    await updateTask(task.id, { isActive: !task.isActive });
+    await refreshTasks();
   };
 
-  const handleInlineUpdate = (taskId: string, updates: Partial<Task>) => {
-    updateTask(taskId, updates);
-    refreshTasks();
+  const handleInlineUpdate = async (taskId: string, updates: Partial<Task>) => {
+    await updateTask(taskId, updates);
+    await refreshTasks();
   };
 
-  const handleFormSubmit = (taskData: Omit<Task, 'id'>) => {
-    addTask(taskData);
-    refreshTasks();
+  const handleFormSubmit = async (taskData: Omit<Task, 'id'>) => {
+    await addTask(taskData);
+    await refreshTasks();
     setShowForm(false);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -68,8 +71,8 @@ export default function TasksAdmin() {
     const [moved] = newTasks.splice(oldIndex, 1);
     newTasks.splice(newIndex, 0, moved);
 
-    reorderTasks(selectedKid!.id, newTasks.map(t => t.id));
-    refreshTasks();
+    await reorderTasks(selectedKid!.id, newTasks.map(t => t.id));
+    await refreshTasks();
   };
 
   return (

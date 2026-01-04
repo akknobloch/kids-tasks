@@ -3,6 +3,8 @@ import { resetTasksIfNeeded } from '../storage';
 
 export function useDailyReset() {
   useEffect(() => {
-    resetTasksIfNeeded();
+    (async () => {
+      await resetTasksIfNeeded();
+    })();
   }, []);
 }

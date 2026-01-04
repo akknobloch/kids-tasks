@@ -24,3 +24,12 @@
   font-weight: 600;
   font-size: 0.85rem;
 }
+
+/* Flex gap fallback for Safari 12 (no flex-gap support) */
+.card-grid-flex {
+  margin: -10px;
+}
+
+.card-grid-flex > .card-cell {
+  margin: 10px;
+}

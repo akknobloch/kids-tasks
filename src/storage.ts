@@ -1,8 +1,10 @@
+import localforage from 'localforage';
 import type { Kid, Task } from './types';
 
 const STORAGE_VERSION = 1;
 const STORAGE_KEY = 'kids-tasks-data';
 let memoryData: StorageData | null = null;
+let pendingInit: Promise<void> | null = null;
 
 interface StorageData {
   version: number;
@@ -44,25 +46,50 @@ const defaultData: StorageData = {
   lastResetDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD
 };
 
+function ensureStore() {
+  if (!pendingInit) {
+    pendingInit = localforage.ready().catch(err => {
+      console.warn('localforage init failed; falling back to memory/localStorage', err);
+    });
+  }
+  return pendingInit;
+}
+
 function cloneData(data: StorageData): StorageData {
   return JSON.parse(JSON.stringify(data));
 }
 
-function readFromStorage(): StorageData | null {
+async function readFromStorage(): Promise<StorageData | null> {
+  await ensureStore();
+  try {
+    const stored = await localforage.getItem<StorageData>(STORAGE_KEY);
+    if (stored) return stored;
+  } catch (err) {
+    console.warn('localforage read failed; attempting localStorage/memory', err);
+  }
+
   try {
     const stored = typeof localStorage !== 'undefined'
       ? localStorage.getItem(STORAGE_KEY)
       : null;
 
-  return stored ? JSON.parse(stored) : memoryData;
+    return stored ? JSON.parse(stored) : memoryData;
   } catch (err) {
     console.warn('localStorage read failed; using in-memory data', err);
     return memoryData;
   }
 }
 
-function writeToStorage(data: StorageData) {
+async function writeToStorage(data: StorageData) {
   memoryData = cloneData(data);
+  await ensureStore();
+  try {
+    await localforage.setItem(STORAGE_KEY, data);
+    return;
+  } catch (err) {
+    console.warn('localforage write failed; attempting localStorage fallback', err);
+  }
+
   try {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -72,37 +99,39 @@ function writeToStorage(data: StorageData) {
   }
 }
 
-function loadData(): StorageData {
-  const stored = readFromStorage();
+async function loadData(): Promise<StorageData> {
+  const stored = await readFromStorage();
   if (!stored || stored.version !== STORAGE_VERSION) {
-    writeToStorage(defaultData);
+    await writeToStorage(defaultData);
     return cloneData(defaultData);
   }
   return stored;
 }
 
 function saveData(data: StorageData) {
-  writeToStorage(data);
+  void writeToStorage(data);
 }
 
-export function getKids(): Kid[] {
-  return loadData().kids;
+export async function getKids(): Promise<Kid[]> {
+  const data = await loadData();
+  return data.kids;
 }
 
-export function getTasks(): Task[] {
-  return loadData().tasks;
+export async function getTasks(): Promise<Task[]> {
+  const data = await loadData();
+  return data.tasks;
 }
 
-export function addKid(kid: Omit<Kid, 'id'>): Kid {
-  const data = loadData();
+export async function addKid(kid: Omit<Kid, 'id'>): Promise<Kid> {
+  const data = await loadData();
   const newKid: Kid = { ...kid, id: `kid${Date.now()}` };
   data.kids.push(newKid);
   saveData(data);
   return newKid;
 }
 
-export function updateKid(id: string, updates: Partial<Kid>): Kid | null {
-  const data = loadData();
+export async function updateKid(id: string, updates: Partial<Kid>): Promise<Kid | null> {
+  const data = await loadData();
   const kidIndex = data.kids.findIndex(k => k.id === id);
   if (kidIndex === -1) return null;
   data.kids[kidIndex] = { ...data.kids[kidIndex], ...updates };
@@ -110,8 +139,8 @@ export function updateKid(id: string, updates: Partial<Kid>): Kid | null {
   return data.kids[kidIndex];
 }
 
-export function deleteKid(id: string): boolean {
-  const data = loadData();
+export async function deleteKid(id: string): Promise<boolean> {
+  const data = await loadData();
   const kidIndex = data.kids.findIndex(k => k.id === id);
   if (kidIndex === -1) return false;
   data.kids.splice(kidIndex, 1);
@@ -121,16 +150,16 @@ export function deleteKid(id: string): boolean {
   return true;
 }
 
-export function addTask(task: Omit<Task, 'id'>): Task {
-  const data = loadData();
+export async function addTask(task: Omit<Task, 'id'>): Promise<Task> {
+  const data = await loadData();
   const newTask: Task = { ...task, id: `task${Date.now()}` };
   data.tasks.push(newTask);
   saveData(data);
   return newTask;
 }
 
-export function updateTask(id: string, updates: Partial<Task>): Task | null {
-  const data = loadData();
+export async function updateTask(id: string, updates: Partial<Task>): Promise<Task | null> {
+  const data = await loadData();
   const taskIndex = data.tasks.findIndex(t => t.id === id);
   if (taskIndex === -1) return null;
   data.tasks[taskIndex] = { ...data.tasks[taskIndex], ...updates };
@@ -138,8 +167,8 @@ export function updateTask(id: string, updates: Partial<Task>): Task | null {
   return data.tasks[taskIndex];
 }
 
-export function deleteTask(id: string): boolean {
-  const data = loadData();
+export async function deleteTask(id: string): Promise<boolean> {
+  const data = await loadData();
   const taskIndex = data.tasks.findIndex(t => t.id === id);
   if (taskIndex === -1) return false;
   data.tasks.splice(taskIndex, 1);
@@ -147,8 +176,8 @@ export function deleteTask(id: string): boolean {
   return true;
 }
 
-export function reorderTasks(kidId: string, taskIds: string[]): void {
-  const data = loadData();
+export async function reorderTasks(kidId: string, taskIds: string[]): Promise<void> {
+  const data = await loadData();
   const tasks = data.tasks.filter(t => t.kidId === kidId);
   taskIds.forEach((id, index) => {
     const task = tasks.find(t => t.id === id);
@@ -157,8 +186,8 @@ export function reorderTasks(kidId: string, taskIds: string[]): void {
   saveData(data);
 }
 
-export function resetTasksIfNeeded(): void {
-  const data = loadData();
+export async function resetTasksIfNeeded(): Promise<void> {
+  const data = await loadData();
   const today = new Date().toISOString().split('T')[0];
   if (data.lastResetDate !== today) {
     data.tasks.forEach(t => t.isDone = false);

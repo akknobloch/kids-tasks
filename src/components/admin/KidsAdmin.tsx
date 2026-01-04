@@ -1,16 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getKids, addKid, updateKid, deleteKid } from '../../storage';
 import type { Kid } from '../../types';
 import KidForm from './KidForm';
 import ConfirmDialog from './ConfirmDialog';
 
 export default function KidsAdmin() {
-  const [kids, setKids] = useState(getKids());
+  const [kids, setKids] = useState<Kid[]>([]);
   const [editingKid, setEditingKid] = useState<Kid | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [deletingKid, setDeletingKid] = useState<Kid | null>(null);
 
-  const refreshKids = () => setKids(getKids());
+  const refreshKids = async () => {
+    const data = await getKids();
+    setKids(data);
+  };
+
+  useEffect(() => {
+    void refreshKids();
+  }, []);
 
   const handleAdd = () => {
     setEditingKid(null);
@@ -26,21 +33,21 @@ export default function KidsAdmin() {
     setDeletingKid(kid);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deletingKid) {
-      deleteKid(deletingKid.id);
-      refreshKids();
+      await deleteKid(deletingKid.id);
+      await refreshKids();
       setDeletingKid(null);
     }
   };
 
-  const handleFormSubmit = (kidData: Omit<Kid, 'id'>) => {
+  const handleFormSubmit = async (kidData: Omit<Kid, 'id'>) => {
     if (editingKid) {
-      updateKid(editingKid.id, kidData);
+      await updateKid(editingKid.id, kidData);
     } else {
-      addKid(kidData);
+      await addKid(kidData);
     }
-    refreshKids();
+    await refreshKids();
     setShowForm(false);
   };
 

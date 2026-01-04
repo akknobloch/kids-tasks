@@ -18,13 +18,15 @@ export default function TaskColumn({ id, title, tasks, accent = 'indigo' }: Task
       <h2 className="text-2xl font-bold text-slate-800 text-center">{title}</h2>
       <div
         ref={setNodeRef}
-        className={`flex-1 min-h-0 bg-gradient-to-br ${areaClass} rounded-3xl p-4 sm:p-5 shadow-inner h-full flex flex-wrap justify-evenly gap-3 sm:gap-4 content-start items-start border border-white/70 overflow-y-auto overflow-x-hidden`}
+        className={`flex-1 min-h-0 bg-gradient-to-br ${areaClass} rounded-3xl p-4 sm:p-5 shadow-inner h-full flex flex-wrap justify-center content-start items-start border border-white/70 overflow-y-auto overflow-x-hidden card-grid-flex`}
       >
         {tasks.map(task => (
-          <TaskCard key={task.id} task={task} />
+          <div key={task.id} className="card-cell">
+            <TaskCard task={task} />
+          </div>
         ))}
         {tasks.length === 0 && (
-          <div className="w-full text-center text-sm text-slate-400 py-10">
+          <div className="card-cell w-full text-center text-sm text-slate-400 py-10">
             {id === 'todo-column'
               ? 'No tasks to do—nice work! 🎉'
               : 'Done is empty... get those tasks done! 😅'}
