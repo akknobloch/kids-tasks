@@ -155,7 +155,6 @@ function ensureEmojiStyles() {
 }
 
 let audioCtx: AudioContext | null = null;
-let audioUnlocked = false;
 let unlockListenerAttached = false;
 
 function ensureAudioUnlock() {
@@ -176,7 +175,6 @@ function ensureAudioUnlock() {
     osc.connect(gain).connect(audioCtx.destination);
     osc.start(0);
     osc.stop(audioCtx.currentTime + 0.01);
-    audioUnlocked = true;
     window.removeEventListener('pointerdown', attempt);
     window.removeEventListener('touchstart', attempt);
   };
@@ -300,8 +298,12 @@ function runCanvasConfettiFallback(colors: string[], container: HTMLElement) {
   canvas.style.pointerEvents = 'none';
   canvas.style.zIndex = '10000';
   container.appendChild(canvas);
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  const maybeContext = canvas.getContext('2d');
+  if (!maybeContext) {
+    canvas.remove();
+    return;
+  }
+  const context: CanvasRenderingContext2D = maybeContext;
 
   const pieces = Array.from({ length: 70 }).map(() => ({
     x: Math.random() * canvas.width,
@@ -320,7 +322,7 @@ function runCanvasConfettiFallback(colors: string[], container: HTMLElement) {
 
   function frame(now: number) {
     const elapsed = now - start;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    context.clearRect(0, 0, canvas.width, canvas.height);
     for (const p of pieces) {
       p.x += p.vx * 16;
       p.y += p.vy * 16;
@@ -329,12 +331,12 @@ function runCanvasConfettiFallback(colors: string[], container: HTMLElement) {
       if (p.x > canvas.width + 40) p.x = -20;
       if (p.x < -40) p.x = canvas.width + 20;
 
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-      ctx.restore();
+      context.save();
+      context.translate(p.x, p.y);
+      context.rotate(p.rot);
+      context.fillStyle = p.color;
+      context.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      context.restore();
     }
     if (elapsed < duration) {
       requestAnimationFrame(frame);
