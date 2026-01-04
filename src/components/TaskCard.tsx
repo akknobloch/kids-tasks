@@ -24,7 +24,7 @@ export default function TaskCard({ task }: TaskCardProps) {
       style={style as any}
       {...listeners}
       {...attributes}
-      className={`w-full max-w-[9rem] mx-auto aspect-square max-h-40 bg-white rounded-2xl shadow-lg flex flex-col items-center justify-center p-3 cursor-grab active:cursor-grabbing transition-transform border border-indigo-50 ${
+      className={`w-[6.75rem] sm:w-[7.25rem] md:w-[8rem] max-w-[8.5rem] flex-shrink-0 flex-grow-0 aspect-square max-h-36 bg-white rounded-2xl shadow-lg flex flex-col items-center justify-center p-3 cursor-grab active:cursor-grabbing transition-transform border border-indigo-50 ${
         isDragging ? 'opacity-60 scale-105 rotate-1' : 'hover:-translate-y-1'
       }`}
     >
