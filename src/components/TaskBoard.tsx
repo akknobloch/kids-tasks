@@ -65,7 +65,7 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
       setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: true } : t));
       onTaskUpdate?.(taskId, { isDone: true });
       playChime();
-      spawnChecks(kid.color);
+      spawnConfettiRain(kid.color);
     }
 
     if (overId === 'todo-column' && task.isDone) {
@@ -145,11 +145,17 @@ function ensureEmojiStyles() {
       0% { transform: translateY(0) rotate(0deg); opacity: 1; }
       100% { transform: translateY(110vh) rotate(20deg); opacity: 0.7; }
     }
+    @keyframes confetti-rain {
+      0% { transform: translate3d(0, -10px, 0) rotate(0deg); opacity: 0.95; }
+      70% { transform: translate3d(-10px, 60vh, 0) rotate(180deg); opacity: 0.95; }
+      100% { transform: translate3d(10px, 120vh, 0) rotate(360deg); opacity: 0; }
+    }
   `;
   document.head.appendChild(style);
 }
 
 let audioCtx: AudioContext | null = null;
+let audioUnlocked = false;
 
 async function playChime() {
   try {
@@ -162,6 +168,17 @@ async function playChime() {
     const ctx = audioCtx;
     if (ctx.state === 'suspended' && ctx.resume) {
       await ctx.resume();
+    }
+
+    // Attempt to unlock audio on first call with a silent click.
+    if (!audioUnlocked) {
+      const unlockOsc = ctx.createOscillator();
+      const unlockGain = ctx.createGain();
+      unlockGain.gain.value = 0.0001;
+      unlockOsc.connect(unlockGain).connect(ctx.destination);
+      unlockOsc.start(0);
+      unlockOsc.stop(ctx.currentTime + 0.01);
+      audioUnlocked = true;
     }
 
     const now = ctx.currentTime;
@@ -195,43 +212,40 @@ async function playChime() {
     oscA.stop(now + 0.6);
     oscB.stop(now + 0.6);
     oscC.stop(now + 0.6);
-  } catch (err) {
+  } catch {
     // Safari 12 may block audio; fail quietly.
   }
 }
 
-function spawnChecks(color: string) {
+function spawnConfettiRain(color: string) {
   const container = document.createElement('div');
   container.style.position = 'fixed';
   container.style.pointerEvents = 'none';
   container.style.inset = '0';
   container.style.zIndex = '9999';
 
-  for (let i = 0; i < 24; i++) {
-    const span = document.createElement('span');
-    span.textContent = '✔️';
-    span.style.position = 'absolute';
-    span.style.left = `${Math.random() * 100}%`;
-    span.style.top = `${50 + Math.random() * 10}%`;
-    span.style.fontSize = `${18 + Math.random() * 10}px`;
-    span.style.color = color || '#16a34a';
-    span.style.opacity = '0';
-    span.style.transform = 'translateY(0) scale(0.8)';
-    span.style.transition = 'transform 600ms ease, opacity 600ms ease';
-    container.appendChild(span);
+  const colors = [color || '#22c55e', '#ffffff', '#fbbf24', '#a5b4fc'];
 
-    requestAnimationFrame(() => {
-      span.style.opacity = '1';
-      span.style.transform = `translateY(-40px) scale(1) rotate(${Math.random() * 12 - 6}deg)`;
-    });
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('span');
+    piece.className = 'confetti-piece';
+    const size = 8 + Math.random() * 8;
+    piece.style.position = 'absolute';
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.top = `${-10 - Math.random() * 20}%`;
+    piece.style.width = `${size}px`;
+    piece.style.height = `${size * 1.4}px`;
+    piece.style.backgroundColor = colors[i % colors.length];
+    piece.style.opacity = '0.95';
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    piece.style.borderRadius = '2px';
+    piece.style.animation = `confetti-rain ${900 + Math.random() * 900}ms cubic-bezier(0.25, 0.8, 0.25, 1) forwards`;
+    piece.style.animationDelay = `${Math.random() * 150}ms`;
+    container.appendChild(piece);
   }
 
   document.body.appendChild(container);
   setTimeout(() => {
-    container.style.transition = 'opacity 400ms ease';
-    container.style.opacity = '0';
-    setTimeout(() => {
-      if (container.parentElement) container.parentElement.removeChild(container);
-    }, 420);
-  }, 700);
+    if (container.parentElement) container.parentElement.removeChild(container);
+  }, 1800);
 }
