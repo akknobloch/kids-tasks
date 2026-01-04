@@ -183,12 +183,14 @@ function simpleConfettiFallback(color: string) {
   container.style.pointerEvents = 'none';
   container.style.zIndex = '9999';
 
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 80; i++) {
     const piece = document.createElement('span');
     piece.className = 'confetti-piece';
     piece.style.backgroundColor = i % 3 === 0 ? '#ffffff' : color;
     piece.style.left = `${Math.random() * 100}%`;
-    piece.style.animationDelay = `${Math.random() * 100}ms`;
+    piece.style.top = `${-10 - Math.random() * 10}%`;
+    piece.style.animationDelay = `${Math.random() * 150}ms`;
+    piece.style.animationDuration = `${900 + Math.random() * 700}ms`;
     piece.style.transform = `scale(${0.6 + Math.random() * 0.8}) rotate(${Math.random() * 360}deg)`;
     container.appendChild(piece);
   }
@@ -196,7 +198,7 @@ function simpleConfettiFallback(color: string) {
   document.body.appendChild(container);
   setTimeout(() => {
     document.body.removeChild(container);
-  }, 1200);
+  }, 1700);
 }
 
 function ensureConfettiStyles() {
@@ -206,17 +208,18 @@ function ensureConfettiStyles() {
   style.textContent = `
     .confetti-piece {
       position: absolute;
-      top: 50%;
       width: 8px;
       height: 14px;
       border-radius: 2px;
       opacity: 0.9;
-      animation: confetti-pop 900ms ease-out forwards;
+      animation-name: confetti-fall;
+      animation-timing-function: cubic-bezier(0.21, 0.61, 0.35, 1);
+      animation-fill-mode: forwards;
     }
-    @keyframes confetti-pop {
-      0% { transform: translate3d(0,0,0) scale(0.8) rotate(0deg); opacity: 0.9; }
-      60% { transform: translate3d(10px, -160px, 0) scale(1) rotate(120deg); opacity: 1; }
-      100% { transform: translate3d(20px, -280px, 0) scale(0.9) rotate(260deg); opacity: 0; }
+    @keyframes confetti-fall {
+      0% { transform: translate3d(0, 0, 0) scale(0.8) rotate(0deg); opacity: 0.95; }
+      60% { transform: translate3d(10px, 55vh, 0) scale(1) rotate(120deg); opacity: 0.95; }
+      100% { transform: translate3d(-8px, 120vh, 0) scale(0.9) rotate(260deg); opacity: 0; }
     }
   `;
   document.head.appendChild(style);

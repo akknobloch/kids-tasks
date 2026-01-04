@@ -8,8 +8,12 @@ interface KidSwitcherProps {
 }
 
 export default function KidSwitcher({ kids, selectedKidId, onSelectKid, size = 'default' }: KidSwitcherProps) {
-  const circleSize = size === 'compact' ? 'w-14 h-14 sm:w-16 sm:h-16' : 'w-20 h-20 sm:w-24 sm:h-24';
-  const labelWidth = size === 'compact' ? 'w-14 sm:w-16 text-xs sm:text-sm' : 'w-20 sm:w-24 text-sm';
+  const circleSize = size === 'compact'
+    ? 'w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16'
+    : 'w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20';
+  const labelWidth = size === 'compact'
+    ? 'w-12 sm:w-14 md:w-16 text-xs sm:text-sm'
+    : 'w-16 sm:w-18 md:w-20 text-sm';
   const ringOffset = size === 'compact' ? 'ring-offset-3' : 'ring-offset-4';
   const itemMargin = size === 'compact' ? 'mx-2 my-2 sm:mx-3 sm:my-3' : 'mx-2 my-2 sm:mx-3 sm:my-3';
   const wrapMargin = size === 'compact' ? '-mx-2 -my-2 sm:-mx-3 sm:-my-3' : '-mx-2 -my-2 sm:-mx-3 sm:-my-3';
