@@ -233,22 +233,26 @@ function spawnConfettiRain(color: string) {
   const colors = [color || '#22c55e', '#ffffff', '#fbbf24', '#a5b4fc'];
   const useJsFallback = isOldSafari();
   const pieces: HTMLElement[] = [];
+  const viewportWidth = window.innerWidth || 800;
+  const viewportHeight = window.innerHeight || 600;
 
   for (let i = 0; i < 60; i++) {
     const piece = document.createElement('span');
     piece.className = 'confetti-piece';
     const size = 8 + Math.random() * 8;
     piece.style.position = 'absolute';
-    piece.style.left = `${Math.random() * 100}%`;
-    piece.style.top = `${-10 - Math.random() * 20}%`;
+    const startX = Math.random() * viewportWidth;
+    const startY = -40 - Math.random() * 40;
+    piece.style.left = `${startX}px`;
+    piece.style.top = `${startY}px`;
     piece.style.width = `${size}px`;
     piece.style.height = `${size * 1.4}px`;
     piece.style.backgroundColor = colors[i % colors.length];
     piece.style.opacity = '0.95';
     piece.style.borderRadius = '2px';
     if (useJsFallback) {
-      piece.dataset.vy = (4 + Math.random() * 6).toString();
-      piece.dataset.vx = (Math.random() * 4 - 2).toString();
+      piece.dataset.vy = (180 + Math.random() * 160).toString(); // px/s
+      piece.dataset.vx = (Math.random() * 120 - 60).toString(); // px/s
       piece.dataset.rot = (Math.random() * 360).toString();
     } else {
       piece.style.transform = `rotate(${Math.random() * 360}deg)`;
@@ -266,16 +270,17 @@ function spawnConfettiRain(color: string) {
     const tick = (now: number) => {
       const elapsed = now - start;
       for (const el of pieces) {
-        const vy = Number(el.dataset.vy || '0');
-        const vx = Number(el.dataset.vx || '0');
+        const vy = Number(el.dataset.vy || '0'); // px/s
+        const vx = Number(el.dataset.vx || '0'); // px/s
         const rot = Number(el.dataset.rot || '0');
         const top = parseFloat(el.style.top) || 0;
         const left = parseFloat(el.style.left) || 0;
-        const newTop = top + vy * 0.6;
-        const newLeft = left + vx * 0.6;
-        const newRot = rot + 5;
-        el.style.top = `${newTop}%`;
-        el.style.left = `${newLeft}%`;
+        const dt = 16; // approx ms per frame
+        const newTop = top + (vy * (dt / 1000));
+        const newLeft = left + (vx * (dt / 1000));
+        const newRot = rot + 6;
+        el.style.top = `${newTop}px`;
+        el.style.left = `${newLeft}px`;
         el.style.transform = `rotate(${newRot}deg)`;
         el.dataset.rot = newRot.toString();
       }
