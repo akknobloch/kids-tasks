@@ -54,7 +54,7 @@ function readFromStorage(): StorageData | null {
       ? localStorage.getItem(STORAGE_KEY)
       : null;
 
-    return stored ? JSON.parse(stored) : memoryData;
+  return stored ? JSON.parse(stored) : memoryData;
   } catch (err) {
     console.warn('localStorage read failed; using in-memory data', err);
     return memoryData;

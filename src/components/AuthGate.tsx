@@ -7,13 +7,32 @@ interface AuthGateProps {
 }
 
 export default function AuthGate({ children }: AuthGateProps) {
+  const safeGet = (key: string) => {
+    try {
+      return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
+    } catch (err) {
+      console.warn('localStorage get failed', err);
+      return null;
+    }
+  };
+
+  const safeSet = (key: string, value: string) => {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(key, value);
+      }
+    } catch (err) {
+      console.warn('localStorage set failed', err);
+    }
+  };
+
   const [authed, setAuthed] = useState(false);
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(AUTH_KEY);
+    const stored = safeGet(AUTH_KEY);
     if (stored === 'ok') setAuthed(true);
   }, []);
 
@@ -34,7 +53,7 @@ export default function AuthGate({ children }: AuthGateProps) {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        localStorage.setItem(AUTH_KEY, 'ok');
+        safeSet(AUTH_KEY, 'ok');
         setAuthed(true);
       } else {
         setError(data.error || 'Authentication failed');
