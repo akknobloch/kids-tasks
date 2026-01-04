@@ -64,6 +64,7 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
       await updateTask(taskId, { isDone: true });
       setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: true } : t));
       onTaskUpdate?.(taskId, { isDone: true });
+      playChime();
     }
 
     if (overId === 'todo-column' && task.isDone) {
@@ -145,4 +146,51 @@ function ensureEmojiStyles() {
     }
   `;
   document.head.appendChild(style);
+}
+
+let audioCtx: AudioContext | null = null;
+
+function playChime() {
+  try {
+    if (!audioCtx) {
+      const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
+      audioCtx = Ctx ? new Ctx() : null;
+    }
+    if (!audioCtx) return;
+
+    const ctx = audioCtx;
+    const now = ctx.currentTime;
+    const base = 523.25; // C5
+    const oscA = ctx.createOscillator();
+    const oscB = ctx.createOscillator();
+    const oscC = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    oscA.type = 'triangle';
+    oscB.type = 'triangle';
+    oscC.type = 'square';
+
+    // Arpeggiated C major: C5 -> E5 -> G5 with sparkle layer.
+    oscA.frequency.setValueAtTime(base, now);
+    oscB.frequency.setValueAtTime(base * 1.2599, now + 0.08); // E5
+    oscC.frequency.setValueAtTime(base * 1.4983, now + 0.16); // G5
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.2, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+
+    oscA.connect(gain);
+    oscB.connect(gain);
+    oscC.connect(gain);
+    gain.connect(ctx.destination);
+
+    oscA.start(now);
+    oscB.start(now + 0.08);
+    oscC.start(now + 0.16);
+    oscA.stop(now + 0.6);
+    oscB.stop(now + 0.6);
+    oscC.stop(now + 0.6);
+  } catch (err) {
+    console.warn('Audio not available', err);
+  }
 }
