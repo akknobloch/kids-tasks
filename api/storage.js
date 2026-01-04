@@ -1,5 +1,5 @@
-import { sql } from '@vercel/postgres';
 import crypto from 'crypto';
+import { sql } from '@vercel/postgres';
 
 const APP_PASSWORD = process.env.APP_PASSWORD || '';
 
@@ -8,7 +8,7 @@ function makeToken(secret) {
 }
 
 function requireAuth(req, res) {
-  if (!APP_PASSWORD) return true; // open access if no password set
+  if (!APP_PASSWORD) return true;
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (token && token === makeToken(APP_PASSWORD)) return true;
@@ -16,77 +16,166 @@ function requireAuth(req, res) {
   return false;
 }
 
+async function ensureTables() {
+  await sql`CREATE TABLE IF NOT EXISTS kids (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    color TEXT NOT NULL,
+    photo_data_url TEXT DEFAULT ''
+  );`;
+
+  await sql`CREATE TABLE IF NOT EXISTS tasks (
+    id TEXT PRIMARY KEY,
+    kid_id TEXT REFERENCES kids(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    icon_type TEXT NOT NULL,
+    icon_value TEXT NOT NULL,
+    "order" INTEGER NOT NULL,
+    is_done BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE
+  );`;
+
+  await sql`CREATE TABLE IF NOT EXISTS meta (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  );`;
+}
+
+async function seedIfEmpty() {
+  const { rows } = await sql`SELECT COUNT(*)::int AS count FROM kids;`;
+  if (rows[0].count > 0) return;
+
+  const kids = [
+    { id: 'kid1', name: 'Alice', color: '#FF6B6B', photoDataUrl: '' },
+    { id: 'kid2', name: 'Bob', color: '#4ECDC4', photoDataUrl: '' },
+  ];
+
+  const tasks = [
+    { id: 'task1', kidId: 'kid1', title: 'Brush teeth', iconType: 'emoji', iconValue: '🪥', order: 1, isDone: false, isActive: true },
+    { id: 'task2', kidId: 'kid1', title: 'Make bed', iconType: 'emoji', iconValue: '🛏️', order: 2, isDone: false, isActive: true },
+    { id: 'task3', kidId: 'kid1', title: 'Eat breakfast', iconType: 'emoji', iconValue: '🥞', order: 3, isDone: false, isActive: true },
+    { id: 'task4', kidId: 'kid1', title: 'Pack backpack', iconType: 'emoji', iconValue: '🎒', order: 4, isDone: false, isActive: true },
+    { id: 'task5', kidId: 'kid1', title: 'Walk dog', iconType: 'emoji', iconValue: '🐕', order: 5, isDone: false, isActive: true },
+    { id: 'task6', kidId: 'kid1', title: 'Do homework', iconType: 'emoji', iconValue: '📚', order: 6, isDone: false, isActive: true },
+    { id: 'task7', kidId: 'kid2', title: 'Brush teeth', iconType: 'emoji', iconValue: '🪥', order: 1, isDone: false, isActive: true },
+    { id: 'task8', kidId: 'kid2', title: 'Make bed', iconType: 'emoji', iconValue: '🛏️', order: 2, isDone: false, isActive: true },
+    { id: 'task9', kidId: 'kid2', title: 'Eat breakfast', iconType: 'emoji', iconValue: '🥞', order: 3, isDone: false, isActive: true },
+    { id: 'task10', kidId: 'kid2', title: 'Pack backpack', iconType: 'emoji', iconValue: '🎒', order: 4, isDone: false, isActive: true },
+    { id: 'task11', kidId: 'kid2', title: 'Walk dog', iconType: 'emoji', iconValue: '🐕', order: 5, isDone: false, isActive: true },
+    { id: 'task12', kidId: 'kid2', title: 'Do homework', iconType: 'emoji', iconValue: '📚', order: 6, isDone: false, isActive: true },
+  ];
+
+  for (const kid of kids) {
+    await sql`INSERT INTO kids (id, name, color, photo_data_url) VALUES (${kid.id}, ${kid.name}, ${kid.color}, ${kid.photoDataUrl});`;
+  }
+  for (const task of tasks) {
+    await sql`INSERT INTO tasks (id, kid_id, title, icon_type, icon_value, "order", is_done, is_active)
+      VALUES (${task.id}, ${task.kidId}, ${task.title}, ${task.iconType}, ${task.iconValue}, ${task.order}, ${task.isDone}, ${task.isActive});`;
+  }
+  const today = new Date().toISOString().split('T')[0];
+  await sql`INSERT INTO meta (key, value) VALUES ('lastResetDate', ${today}) ON CONFLICT (key) DO UPDATE SET value = ${today};`;
+}
+
+async function getLastResetDate() {
+  const { rows } = await sql`SELECT value FROM meta WHERE key = 'lastResetDate';`;
+  return rows[0]?.value || null;
+}
+
+async function setLastResetDate(dateStr) {
+  await sql`INSERT INTO meta (key, value) VALUES ('lastResetDate', ${dateStr}) ON CONFLICT (key) DO UPDATE SET value = ${dateStr};`;
+}
+
+async function listData() {
+  const kidsResult = await sql`SELECT id, name, color, photo_data_url AS "photoDataUrl" FROM kids ORDER BY name;`;
+  const tasksResult = await sql`SELECT id, kid_id AS "kidId", title, icon_type AS "iconType", icon_value AS "iconValue", "order", is_done AS "isDone", is_active AS "isActive" FROM tasks;`;
+  const lastResetDate = await getLastResetDate();
+  return { kids: kidsResult.rows, tasks: tasksResult.rows, lastResetDate };
+}
+
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (!requireAuth(req, res)) return;
 
+  await ensureTables();
+  await seedIfEmpty();
+
+  if (req.method === 'GET') {
+    const data = await listData();
+    return res.status(200).json(data);
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { action, payload } = req.body || {};
+
   try {
-    if (req.method === 'GET') {
-      const kidsResult = await sql`SELECT * FROM kids ORDER BY id`;
-      const tasksResult = await sql`SELECT * FROM tasks ORDER BY "order"`;
-      const settingsResult = await sql`SELECT value FROM settings WHERE key = 'lastResetDate'`;
-      const lastResetDate = settingsResult.rows[0]?.value || new Date().toISOString().split('T')[0];
-      return res.status(200).json({ kids: kidsResult.rows, tasks: tasksResult.rows, lastResetDate });
-    }
-
-    if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Method not allowed' });
-    }
-
-    const { action, payload } = req.body || {};
-
     switch (action) {
       case 'addKid': {
-        const id = `kid${Date.now()}`;
-        const result = await sql`INSERT INTO kids (id, name, color, photoDataUrl) VALUES (${id}, ${payload.name}, ${payload.color}, ${payload.photoDataUrl}) RETURNING *`;
-        return res.status(200).json(result.rows[0]);
+        const kid = { ...payload, id: `kid${Date.now()}` };
+        await sql`INSERT INTO kids (id, name, color, photo_data_url) VALUES (${kid.id}, ${kid.name}, ${kid.color}, ${kid.photoDataUrl || ''});`;
+        return res.status(200).json(kid);
       }
       case 'updateKid': {
-        const result = await sql`UPDATE kids SET name = ${payload.updates.name}, color = ${payload.updates.color}, photoDataUrl = ${payload.updates.photoDataUrl} WHERE id = ${payload.id} RETURNING *`;
-        if (result.rows.length === 0) return res.status(404).json({ error: 'Kid not found' });
-        return res.status(200).json(result.rows[0]);
+        const { id, updates } = payload;
+        await sql`UPDATE kids SET name = COALESCE(${updates.name}, name), color = COALESCE(${updates.color}, color), photo_data_url = COALESCE(${updates.photoDataUrl}, photo_data_url) WHERE id = ${id};`;
+        const updated = await sql`SELECT id, name, color, photo_data_url AS "photoDataUrl" FROM kids WHERE id = ${id};`;
+        if (!updated.rows[0]) return res.status(404).json({ error: 'Kid not found' });
+        return res.status(200).json(updated.rows[0]);
       }
       case 'deleteKid': {
-        await sql`DELETE FROM tasks WHERE kidId = ${payload.id}`;
-        await sql`DELETE FROM kids WHERE id = ${payload.id}`;
+        const { id } = payload;
+        await sql`DELETE FROM kids WHERE id = ${id};`;
         return res.status(200).json({ success: true });
       }
       case 'addTask': {
-        const id = `task${Date.now()}`;
-        const result = await sql`INSERT INTO tasks (id, kidId, title, iconType, iconValue, "order", isDone, isActive) VALUES (${id}, ${payload.kidId}, ${payload.title}, ${payload.iconType}, ${payload.iconValue}, ${payload.order}, ${payload.isDone}, ${payload.isActive}) RETURNING *`;
-        return res.status(200).json(result.rows[0]);
+        const task = { ...payload, id: `task${Date.now()}` };
+        await sql`INSERT INTO tasks (id, kid_id, title, icon_type, icon_value, "order", is_done, is_active)
+          VALUES (${task.id}, ${task.kidId}, ${task.title}, ${task.iconType}, ${task.iconValue || ''}, ${task.order}, ${task.isDone}, ${task.isActive});`;
+        return res.status(200).json(task);
       }
       case 'updateTask': {
-        const result = await sql`UPDATE tasks SET title = ${payload.updates.title}, iconType = ${payload.updates.iconType}, iconValue = ${payload.updates.iconValue}, "order" = ${payload.updates.order}, isDone = ${payload.updates.isDone}, isActive = ${payload.updates.isActive} WHERE id = ${payload.id} RETURNING *`;
-        if (result.rows.length === 0) return res.status(404).json({ error: 'Task not found' });
-        return res.status(200).json(result.rows[0]);
+        const { id, updates } = payload;
+        const existing = await sql`SELECT * FROM tasks WHERE id = ${id};`;
+        if (!existing.rows[0]) return res.status(404).json({ error: 'Task not found' });
+        await sql`UPDATE tasks
+          SET title = COALESCE(${updates.title}, title),
+              icon_type = COALESCE(${updates.iconType}, icon_type),
+              icon_value = COALESCE(${updates.iconValue}, icon_value),
+              "order" = COALESCE(${updates.order}, "order"),
+              is_done = COALESCE(${updates.isDone}, is_done),
+              is_active = COALESCE(${updates.isActive}, is_active)
+          WHERE id = ${id};`;
+        const updated = await sql`SELECT id, kid_id AS "kidId", title, icon_type AS "iconType", icon_value AS "iconValue", "order", is_done AS "isDone", is_active AS "isActive" FROM tasks WHERE id = ${id};`;
+        return res.status(200).json(updated.rows[0]);
       }
       case 'deleteTask': {
-        await sql`DELETE FROM tasks WHERE id = ${payload.id}`;
+        const { id } = payload;
+        await sql`DELETE FROM tasks WHERE id = ${id};`;
         return res.status(200).json({ success: true });
       }
       case 'reorderTasks': {
         const { kidId, taskIds } = payload;
         for (let i = 0; i < taskIds.length; i++) {
-          await sql`UPDATE tasks SET "order" = ${i + 1} WHERE id = ${taskIds[i]} AND kidId = ${kidId}`;
+          await sql`UPDATE tasks SET "order" = ${i + 1} WHERE id = ${taskIds[i]} AND kid_id = ${kidId};`;
         }
         return res.status(200).json({ success: true });
       }
       case 'resetTasksIfNeeded': {
         const today = new Date().toISOString().split('T')[0];
-        const settingsResult = await sql`SELECT value FROM settings WHERE key = 'lastResetDate'`;
-        const lastResetDate = settingsResult.rows[0]?.value;
-        if (lastResetDate !== today) {
-          await sql`UPDATE tasks SET isDone = false`;
-          await sql`INSERT INTO settings (key, value) VALUES ('lastResetDate', ${today}) ON CONFLICT (key) DO UPDATE SET value = ${today}`;
+        const last = await getLastResetDate();
+        if (last !== today) {
+          await sql`UPDATE tasks SET is_done = FALSE;`;
+          await setLastResetDate(today);
         }
         return res.status(200).json({ success: true });
       }
       default:
         return res.status(400).json({ error: 'Unknown action' });
     }
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'Internal server error' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Server error' });
   }
 }
