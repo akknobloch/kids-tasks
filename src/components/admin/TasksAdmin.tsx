@@ -55,8 +55,8 @@ export default function TasksAdmin() {
   };
 
   const handleFormSubmit = async (taskData: Omit<Task, 'id'>) => {
-    await addTask(taskData);
-    await refreshTasks();
+    const created = await addTask(taskData);
+    setAllTasks(prev => [...prev, created]);
     setShowForm(false);
   };
 
