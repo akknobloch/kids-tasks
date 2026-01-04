@@ -13,7 +13,6 @@ import type { Kid, Task } from '../types';
 import { updateTask } from '../storage';
 import TaskColumn from './TaskColumn';
 import TaskCard from './TaskCard';
-import { launchConfetti } from '../utils/domConfetti';
 
 interface TaskBoardProps {
   kid: Kid;
@@ -25,11 +24,14 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [taskList, setTaskList] = useState<Task[]>(tasks);
   const sensors = useSensors(
-    useSensor(MouseSensor),
+    useSensor(MouseSensor, {
+      // Small movement threshold helps Safari 12 detect drags quickly without accidental taps.
+      activationConstraint: { distance: 4 },
+    }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 75,
-        tolerance: 8,
+        delay: 0,
+        tolerance: 6,
       },
     }),
   );
@@ -62,7 +64,6 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
       await updateTask(taskId, { isDone: true });
       setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: true } : t));
       onTaskUpdate?.(taskId, { isDone: true });
-      fireConfetti(kid.color);
     }
 
     if (overId === 'todo-column' && task.isDone) {
@@ -144,12 +145,4 @@ function ensureEmojiStyles() {
     }
   `;
   document.head.appendChild(style);
-}
-
-function fireConfetti(color: string) {
-  launchConfetti({
-    colors: [color, '#ffffff', '#a5b4fc', '#fcd34d'],
-    count: 90,
-    origin: { x: 0.5, y: 0.4 },
-  });
 }

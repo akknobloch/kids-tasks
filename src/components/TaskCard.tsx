@@ -13,6 +13,8 @@ export default function TaskCard({ task }: TaskCardProps) {
   const style = {
     touchAction: 'none',
     WebkitTouchCallout: 'none',
+    userSelect: 'none',
+    WebkitUserSelect: 'none',
     ...(transform
       ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
       : undefined),
