@@ -2,6 +2,7 @@ import type { Kid, Task } from './types';
 
 const STORAGE_VERSION = 1;
 const STORAGE_KEY = 'kids-tasks-data';
+let memoryData: StorageData | null = null;
 
 interface StorageData {
   version: number;
@@ -43,23 +44,45 @@ const defaultData: StorageData = {
   lastResetDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD
 };
 
+function cloneData(data: StorageData): StorageData {
+  return JSON.parse(JSON.stringify(data));
+}
+
+function readFromStorage(): StorageData | null {
+  try {
+    const stored = typeof localStorage !== 'undefined'
+      ? localStorage.getItem(STORAGE_KEY)
+      : null;
+
+    return stored ? JSON.parse(stored) : memoryData;
+  } catch (err) {
+    console.warn('localStorage read failed; using in-memory data', err);
+    return memoryData;
+  }
+}
+
+function writeToStorage(data: StorageData) {
+  memoryData = cloneData(data);
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+  } catch (err) {
+    console.warn('localStorage write failed; retaining in-memory data only', err);
+  }
+}
+
 function loadData(): StorageData {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
-    return defaultData;
+  const stored = readFromStorage();
+  if (!stored || stored.version !== STORAGE_VERSION) {
+    writeToStorage(defaultData);
+    return cloneData(defaultData);
   }
-  const data: StorageData = JSON.parse(stored);
-  if (data.version !== STORAGE_VERSION) {
-    // For now, just reset to default on version mismatch
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
-    return defaultData;
-  }
-  return data;
+  return stored;
 }
 
 function saveData(data: StorageData) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  writeToStorage(data);
 }
 
 export function getKids(): Kid[] {
