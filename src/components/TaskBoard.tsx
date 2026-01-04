@@ -65,6 +65,7 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
       setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: true } : t));
       onTaskUpdate?.(taskId, { isDone: true });
       playChime();
+      spawnChecks(kid.color);
     }
 
     if (overId === 'todo-column' && task.isDone) {
@@ -150,7 +151,7 @@ function ensureEmojiStyles() {
 
 let audioCtx: AudioContext | null = null;
 
-function playChime() {
+async function playChime() {
   try {
     if (!audioCtx) {
       const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
@@ -159,6 +160,10 @@ function playChime() {
     if (!audioCtx) return;
 
     const ctx = audioCtx;
+    if (ctx.state === 'suspended' && ctx.resume) {
+      await ctx.resume();
+    }
+
     const now = ctx.currentTime;
     const base = 523.25; // C5
     const oscA = ctx.createOscillator();
@@ -191,6 +196,42 @@ function playChime() {
     oscB.stop(now + 0.6);
     oscC.stop(now + 0.6);
   } catch (err) {
-    console.warn('Audio not available', err);
+    // Safari 12 may block audio; fail quietly.
   }
+}
+
+function spawnChecks(color: string) {
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.pointerEvents = 'none';
+  container.style.inset = '0';
+  container.style.zIndex = '9999';
+
+  for (let i = 0; i < 24; i++) {
+    const span = document.createElement('span');
+    span.textContent = '✔️';
+    span.style.position = 'absolute';
+    span.style.left = `${Math.random() * 100}%`;
+    span.style.top = `${50 + Math.random() * 10}%`;
+    span.style.fontSize = `${18 + Math.random() * 10}px`;
+    span.style.color = color || '#16a34a';
+    span.style.opacity = '0';
+    span.style.transform = 'translateY(0) scale(0.8)';
+    span.style.transition = 'transform 600ms ease, opacity 600ms ease';
+    container.appendChild(span);
+
+    requestAnimationFrame(() => {
+      span.style.opacity = '1';
+      span.style.transform = `translateY(-40px) scale(1) rotate(${Math.random() * 12 - 6}deg)`;
+    });
+  }
+
+  document.body.appendChild(container);
+  setTimeout(() => {
+    container.style.transition = 'opacity 400ms ease';
+    container.style.opacity = '0';
+    setTimeout(() => {
+      if (container.parentElement) container.parentElement.removeChild(container);
+    }, 420);
+  }, 700);
 }
