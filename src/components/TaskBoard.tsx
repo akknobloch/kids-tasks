@@ -13,6 +13,7 @@ import type { Kid, Task } from '../types';
 import { updateTask } from '../storage';
 import TaskColumn from './TaskColumn';
 import TaskCard from './TaskCard';
+import { launchConfetti } from '../utils/domConfetti';
 
 interface TaskBoardProps {
   kid: Kid;
@@ -146,67 +147,9 @@ function ensureEmojiStyles() {
 }
 
 function fireConfetti(color: string) {
-  simpleConfettiFallback(color);
-}
-
-function simpleConfettiFallback(color: string) {
-  ensureConfettiStyles();
-  const container = document.createElement('div');
-  container.style.position = 'fixed';
-  container.style.inset = '0';
-  container.style.pointerEvents = 'none';
-  container.style.zIndex = '99999';
-
-  for (let i = 0; i < 80; i++) {
-    const piece = document.createElement('span');
-    piece.className = 'confetti-piece';
-    const size = 6 + Math.random() * 6;
-    const endX = -40 + Math.random() * 80; // random drift
-    const startRot = Math.random() * 180;
-    const midRot = startRot + (Math.random() * 180 + 90);
-    const endRot = midRot + (Math.random() * 180 + 120);
-
-    piece.style.backgroundColor = i % 3 === 0 ? '#ffffff' : color;
-    piece.style.left = `${Math.random() * 100}%`;
-    piece.style.top = `${-10 - Math.random() * 10}%`;
-    piece.style.animationDelay = `${Math.random() * 150}ms`;
-    piece.style.animationDuration = `${900 + Math.random() * 700}ms`;
-    piece.style.width = `${size}px`;
-    piece.style.height = `${size * 1.6}px`;
-    piece.style.setProperty('--driftX', `${endX}px`);
-    piece.style.setProperty('--rotStart', `${startRot}deg`);
-    piece.style.setProperty('--rotMid', `${midRot}deg`);
-    piece.style.setProperty('--rotEnd', `${endRot}deg`);
-    container.appendChild(piece);
-  }
-
-  document.body.appendChild(container);
-  setTimeout(() => {
-    document.body.removeChild(container);
-  }, 1700);
-}
-
-function ensureConfettiStyles() {
-  if (document.getElementById('confetti-fallback-style')) return;
-  const style = document.createElement('style');
-  style.id = 'confetti-fallback-style';
-  style.textContent = `
-    .confetti-piece {
-      position: absolute;
-      width: 8px;
-      height: 14px;
-      border-radius: 2px;
-      opacity: 0.9;
-      animation-name: confetti-fall;
-      animation-timing-function: cubic-bezier(0.21, 0.61, 0.35, 1);
-      animation-fill-mode: forwards;
-      transform-origin: center;
-    }
-    @keyframes confetti-fall {
-      0% { transform: translate3d(0, 0, 0) rotate(var(--rotStart, 0deg)) scale(0.9); opacity: 0.98; }
-      65% { transform: translate3d(calc(var(--driftX, 10px) * 0.6), 55vh, 0) rotate(var(--rotMid, 140deg)) scale(1); opacity: 0.98; }
-      100% { transform: translate3d(calc(var(--driftX, 10px)), 120vh, 0) rotate(var(--rotEnd, 280deg)) scale(0.95); opacity: 0; }
-    }
-  `;
-  document.head.appendChild(style);
+  launchConfetti({
+    colors: [color, '#ffffff', '#a5b4fc', '#fcd34d'],
+    count: 90,
+    origin: { x: 0.5, y: 0.4 },
+  });
 }
