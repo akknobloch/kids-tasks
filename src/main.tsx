@@ -4,7 +4,6 @@ import { BrowserRouter } from 'react-router-dom'
 import './polyfills'
 import './index.css'
 import App from './App.tsx'
-import { primeCelebration } from './utils/celebration'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -21,6 +20,3 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
-
-// Preload celebration GIF early.
-primeCelebration();
