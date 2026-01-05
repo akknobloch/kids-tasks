@@ -54,7 +54,7 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
     setActiveTask(null);
     const { active, over } = event;
     if (!over) return;
-
+    console.log("Drag ended:", active.id, "over", over.id);
     const taskId = active.id as string;
     const overId = over.id as string;
     const task = taskList.find(t => t.id === taskId);
@@ -63,6 +63,7 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
 
     if (overId === 'done-column' && !task.isDone) {
       // Moved to done
+      console.log("Marking task as done:", taskId);
       await updateTask(taskId, { isDone: true });
       setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: true } : t));
       onTaskUpdate?.(taskId, { isDone: true });
