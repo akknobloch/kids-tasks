@@ -31,11 +31,11 @@ export function triggerCelebrationGif() {
   img.setAttribute('aria-hidden', 'true');
 
   img.style.position = 'fixed';
-  img.style.left = '50%';
-  img.style.bottom = '24px';
-  img.style.width = '140px';
+  img.style.right = '18px';
+  img.style.top = '18px';
+  img.style.width = '160px';
   img.style.height = 'auto';
-  img.style.transform = 'translateX(-50%) translateY(20px)';
+  img.style.transform = 'translateX(20px)';
   img.style.opacity = '0';
   img.style.zIndex = '2147483647';
   img.style.pointerEvents = 'none';
@@ -47,16 +47,16 @@ export function triggerCelebrationGif() {
 
   t1 = window.setTimeout(() => {
     img.style.opacity = '1';
-    img.style.transform = 'translateX(-50%) translateY(0)';
+    img.style.transform = 'translateX(0)';
   }, 0);
 
   t2 = window.setTimeout(() => {
     img.style.opacity = '0';
-    img.style.transform = 'translateX(-50%) translateY(20px)';
-  }, 750);
+    img.style.transform = 'translateX(20px)';
+  }, 4800);
 
   t3 = window.setTimeout(() => {
     if (celebrationNode) celebrationNode.remove();
     celebrationNode = null;
-  }, 1000);
+  }, 5200);
 }
