@@ -1,8 +1,12 @@
+import { getRandomCelebrationGifUrl, preloadCelebrationGifs } from './celebrationGifs';
+
 let activeGif: HTMLImageElement | null = null;
 let hideTimer: number | null = null;
 let removeTimer: number | null = null;
 
 export function triggerCelebrationGif() {
+  preloadCelebrationGifs();
+
   // Respect reduced motion
   if (
     window.matchMedia &&
@@ -19,8 +23,11 @@ export function triggerCelebrationGif() {
     activeGif = null;
   }
 
+  const gifUrl = getRandomCelebrationGifUrl();
+  if (!gifUrl) return;
+
   const img = document.createElement("img");
-  img.src = window.location.origin + "/celebration.gif";
+  img.src = gifUrl;
   img.alt = "";
   img.setAttribute("aria-hidden", "true");
 

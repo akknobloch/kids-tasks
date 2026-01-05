@@ -1,33 +1,25 @@
-// Celebration helper: shows a GIF overlay or a reduced-motion pulse.
-const GIF_PATH = '/celebration.gif';
+import { getRandomCelebrationGifUrl, preloadCelebrationGifs } from './celebrationGifs';
 
-let preloadImg: HTMLImageElement | null = null;
+// Celebration helper: shows a GIF overlay or a reduced-motion pulse.
 let overlayEl: HTMLDivElement | null = null;
 let hideTimer: number | null = null;
 let removeTimer: number | null = null;
 let pulseTimer: number | null = null;
-let gifUrlCache: string | null = null;
-
-function getGifUrl() {
-  if (gifUrlCache) return gifUrlCache;
-  if (typeof window !== 'undefined') {
-    gifUrlCache = `${window.location.origin}${GIF_PATH}`;
-  } else {
-    gifUrlCache = GIF_PATH;
-  }
-  return gifUrlCache;
-}
 
 export function primeCelebration() {
-  if (preloadImg) return;
-  preloadImg = new Image();
-  preloadImg.src = getGifUrl();
+  preloadCelebrationGifs();
 }
 
 export function triggerCelebration(doneColumnId = 'done-column') {
   primeCelebration();
 
   if (shouldReduceMotion()) {
+    pulseDoneColumn(doneColumnId);
+    return;
+  }
+
+  const gifUrl = getRandomCelebrationGifUrl();
+  if (!gifUrl) {
     pulseDoneColumn(doneColumnId);
     return;
   }
@@ -60,7 +52,7 @@ export function triggerCelebration(doneColumnId = 'done-column') {
   overlay.style.transition = 'transform 220ms ease, opacity 220ms ease';
 
   const img = document.createElement('img');
-  img.src = getGifUrl();
+  img.src = gifUrl;
   img.alt = '';
   img.style.width = '100%';
   img.style.height = 'auto';
