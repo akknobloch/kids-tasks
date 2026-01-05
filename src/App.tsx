@@ -11,12 +11,12 @@ export function triggerCelebrationGif() {
 
   const img = document.createElement("img");
   img.id = "celebration-gif";
+
   img.src =
-    new URL("/celebrate.gif", import.meta.env.BASE_URL).toString() +
-    "?v=" +
-    Date.now();
+    window.location.origin + "/celebrate.gif?v=" + Date.now();
 
   img.alt = "";
+
   img.style.position = "fixed";
   img.style.top = "16px";
   img.style.right = "16px";
@@ -44,6 +44,7 @@ export function triggerCelebrationGif() {
     img.remove();
   }, 1050);
 }
+
 
 
 function App() {
