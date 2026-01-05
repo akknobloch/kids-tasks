@@ -37,8 +37,8 @@ export function triggerCelebration(doneColumnId = 'done-column') {
   overlay.style.position = 'fixed';
   overlay.style.right = '18px';
   overlay.style.bottom = '18px';
-  overlay.style.width = '120px';
-  overlay.style.height = '120px';
+  overlay.style.width = '220px';
+  overlay.style.height = '300px';
   overlay.style.pointerEvents = 'none';
   overlay.style.zIndex = '10000';
   overlay.style.display = 'flex';
@@ -67,12 +67,12 @@ export function triggerCelebration(doneColumnId = 'done-column') {
   hideTimer = window.setTimeout(() => {
     overlay.style.transform = 'translateY(30px)';
     overlay.style.opacity = '0';
-  }, 650);
+  }, 4800);
 
   removeTimer = window.setTimeout(() => {
     if (overlay.parentElement) overlay.parentElement.removeChild(overlay);
     if (overlayEl === overlay) overlayEl = null;
-  }, 950);
+  }, 5200);
 }
 
 function pulseDoneColumn(doneColumnId: string) {
