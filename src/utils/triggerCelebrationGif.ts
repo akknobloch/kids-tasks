@@ -24,10 +24,24 @@ export function triggerCelebrationGif() {
   img.alt = "";
   img.setAttribute("aria-hidden", "true");
 
-  // Positioning
+  // Positioning (defaults to top-right; if task board is present, align above it)
   img.style.position = "fixed";
-  img.style.top = "3.7rem";
-  img.style.right = "1rem";
+  const target = document.querySelector<HTMLElement>('[data-task-board-root]');
+  const width = 200;
+  const height = 120;
+  if (target) {
+    const rect = target.getBoundingClientRect();
+    const top = Math.max(8, rect.top - height - 12);
+    const left = Math.min(
+      window.innerWidth - width - 8,
+      Math.max(8, rect.right - width - 8)
+    );
+    img.style.top = `${top}px`;
+    img.style.left = `${left}px`;
+  } else {
+    img.style.top = "3.7rem";
+    img.style.right = "1rem";
+  }
   img.style.width = "200px";
   img.style.height = "auto";
   img.style.zIndex = "2147483647";
@@ -52,11 +66,11 @@ export function triggerCelebrationGif() {
   hideTimer = window.setTimeout(() => {
     img.style.opacity = "0";
     img.style.transform = "translateY(-10px)";
-  }, 800);
+  }, 5000);
 
   // Cleanup
   removeTimer = window.setTimeout(() => {
     if (activeGif) activeGif.remove();
     activeGif = null;
-  }, 1050);
+  }, 5300);
 }

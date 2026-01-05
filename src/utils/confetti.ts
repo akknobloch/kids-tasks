@@ -21,7 +21,7 @@ export function fireCompletionConfetti(primaryColor?: string) {
   try {
     const shoot = confetti.create(canvas, { resize: false, useWorker: false });
     const common = {
-      scalar: 0.65,
+      scalar: 0.9,
       ticks: 90,
       disableForReducedMotion: true,
       colors,
