@@ -18,7 +18,7 @@ function App() {
     const img = new Image();
     img.onload = () => alert("GIF loaded: " + img.naturalWidth + "x" + img.naturalHeight);
     img.onerror = () => alert("GIF failed to load");
-    img.src = "/celebrate.gif"; // must be in /public
+    img.src = "/celebration.gif"; // must be in /public
     el.textContent = "CELEBRATE";
     el.style.position = "fixed";
     el.style.left = "16px";
