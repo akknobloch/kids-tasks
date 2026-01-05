@@ -87,7 +87,7 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col h-full min-h-0" data-task-board-root>
+      <div className="flex flex-col h-full min-h-0">
         <div className="soft-card rounded-3xl p-3 sm:p-4 flex-1 min-h-0 flex flex-col">
           <div className="h-full min-h-0 flex flex-col sm:flex-row space-y-6 sm:space-y-0 items-stretch relative">
             <div className="h-full min-h-0 w-full sm:w-1/2 sm:px-3">
