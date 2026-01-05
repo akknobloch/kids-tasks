@@ -63,11 +63,12 @@ function fireFallback(colors: string[]) {
   canvas.style.zIndex = '9999';
   document.body.appendChild(canvas);
 
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
+  const maybeCtx = canvas.getContext('2d');
+  if (!maybeCtx) {
     canvas.remove();
     return;
   }
+  const ctx: CanvasRenderingContext2D = maybeCtx;
 
   const pieces = Array.from({ length: 26 }).map(() => ({
     x: canvas.width * 0.5,
