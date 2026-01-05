@@ -15,6 +15,7 @@ import TaskColumn from './TaskColumn';
 import TaskCard from './TaskCard';
 import { fireCompletionConfetti } from '../utils/confetti';
 import { triggerCelebrationGif } from '../utils/triggerCelebrationGif';
+import { triggerMinionFlood } from '../utils/minionFlood';
 
 interface TaskBoardProps {
   kid: Kid;
@@ -68,7 +69,12 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
       onTaskUpdate?.(taskId, { isDone: true });
       playChime();
       fireCompletionConfetti(kid.color);
-      triggerCelebrationGif();
+      const remainingTodos = taskList.filter(t => !t.isDone && t.id !== taskId).length;
+      if (remainingTodos === 0) {
+        triggerMinionFlood();
+      } else {
+        triggerCelebrationGif();
+      }
     }
 
     if (overId === 'todo-column' && task.isDone) {

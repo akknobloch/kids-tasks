@@ -25,11 +25,15 @@ export default function TaskColumn({ id, title, tasks, accent = 'indigo' }: Task
             <TaskCard task={task} />
           </div>
         ))}
-        {tasks.length === 0 && (
+        {tasks.length === 0 && id === 'todo-column' && (
+          <div className="card-cell w-full text-center text-slate-500 py-10 flex flex-col items-center gap-3 opacity-80">
+            <div className="text-6xl sm:text-7xl opacity-80" role="img" aria-label="Celebration">🎉</div>
+            <div className="text-base sm:text-lg font-semibold text-slate-400">No tasks to do—nice work!</div>
+          </div>
+        )}
+        {tasks.length === 0 && id !== 'todo-column' && (
           <div className="card-cell w-full text-center text-sm text-slate-400 py-10">
-            {id === 'todo-column'
-              ? 'No tasks to do—nice work! 🎉'
-              : 'Done is empty... get those tasks done! 😅'}
+            Done is empty... get those tasks done! 😅
           </div>
         )}
       </div>

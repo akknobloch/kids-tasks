@@ -7,6 +7,7 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import SortableTaskItem from './SortableTaskItem';
 import KidSwitcher from '../KidSwitcher';
+import { triggerFullBoardCelebration } from '../../utils/triggerCelebrationGif';
 
 export default function TasksAdmin() {
   const [kids, setKids] = useState<Awaited<ReturnType<typeof getKids>>>([]);
@@ -89,12 +90,21 @@ export default function TasksAdmin() {
         <>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Tasks for {selectedKid.name}</h2>
-            <button
-              onClick={handleAdd}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-            >
-              Add Task
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => triggerFullBoardCelebration()}
+                className="bg-emerald-600 text-white px-3 py-2 rounded-md hover:bg-emerald-700 text-sm font-semibold shadow-sm"
+              >
+                Test Celebration
+              </button>
+              <button
+                onClick={handleAdd}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              >
+                Add Task
+              </button>
+            </div>
           </div>
           <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
