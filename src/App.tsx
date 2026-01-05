@@ -11,39 +11,34 @@ export function triggerCelebrationGif() {
 
   const img = document.createElement("img");
   img.id = "celebration-gif";
-
-  img.src =
-    window.location.origin + "/celebrate.gif?v=" + Date.now();
-
   img.alt = "";
 
+  // Use absolute URL to avoid base path issues
+  img.src = window.location.origin + "/celebrate.gif?v=" + Date.now();
+
+  // Hard-force visibility
   img.style.position = "fixed";
   img.style.top = "16px";
   img.style.right = "16px";
   img.style.width = "120px";
+  img.style.height = "120px";
   img.style.zIndex = "2147483647";
   img.style.pointerEvents = "none";
-
-  img.style.opacity = "0";
-  img.style.transform = "translateY(-10px)";
-  img.style.transition = "transform 200ms ease, opacity 200ms ease";
+  img.style.opacity = "1";
+  img.style.transform = "none";
+  img.style.display = "block";
+  img.style.visibility = "visible";
+  img.style.background = "magenta"; // debug
+  img.style.border = "4px solid yellow"; // debug
 
   document.body.appendChild(img);
 
-  requestAnimationFrame(() => {
-    img.style.opacity = "1";
-    img.style.transform = "translateY(0)";
-  });
+  img.onload = () => console.log("GIF loaded", img.naturalWidth, img.naturalHeight);
+  img.onerror = () => console.log("GIF failed");
 
-  setTimeout(() => {
-    img.style.opacity = "0";
-    img.style.transform = "translateY(-10px)";
-  }, 800);
-
-  setTimeout(() => {
-    img.remove();
-  }, 1050);
+  // setTimeout(() => img.remove(), 2000);
 }
+
 
 
 
