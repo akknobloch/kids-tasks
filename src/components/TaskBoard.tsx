@@ -63,7 +63,6 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
 
     if (overId === 'done-column' && !task.isDone) {
       // Moved to done
-      console.log("Marking task as done:", taskId);
       await updateTask(taskId, { isDone: true });
       setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: true } : t));
       onTaskUpdate?.(taskId, { isDone: true });

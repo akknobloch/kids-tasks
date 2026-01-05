@@ -22,7 +22,7 @@ export function fireCompletionConfetti(primaryColor?: string) {
     const shoot = confetti.create(canvas, { resize: false, useWorker: false });
     const common = {
       scalar: 0.9,
-      ticks: 90,
+      ticks: 120,
       disableForReducedMotion: true,
       colors,
     };
@@ -41,18 +41,18 @@ export function fireCompletionConfetti(primaryColor?: string) {
       ...common,
       particleCount: 28,
       spread: 130,
-      startVelocity: 30,
+      startVelocity: 32,
       origin: { x: 0.2, y: 0.9 },
-      ticks: 80,
+      ticks: 110,
     });
 
     shoot({
       ...common,
       particleCount: 28,
       spread: 130,
-      startVelocity: 30,
+      startVelocity: 32,
       origin: { x: 0.8, y: 0.9 },
-      ticks: 80,
+      ticks: 110,
     });
   } catch (err) {
     console.warn('Confetti unavailable', err);
@@ -61,7 +61,7 @@ export function fireCompletionConfetti(primaryColor?: string) {
       if (canvas.parentElement) {
         canvas.parentElement.removeChild(canvas);
       }
-    }, 1000);
+    }, 1500);
   }
 }
 
