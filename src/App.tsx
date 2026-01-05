@@ -4,7 +4,6 @@ import KidsView from './components/KidsView';
 import AdminLayout from './components/admin/AdminLayout';
 import './App.css';
 import AuthGate from './components/AuthGate';
-import SoundUnlockButton from './components/SoundUnlockButton';
 
 function App() {
   useDailyReset();
@@ -12,7 +11,6 @@ function App() {
   return (
     <AuthGate>
       <div className="min-h-screen">
-        <SoundUnlockButton />
         <div className="max-w-6xl mx-auto px-4 py-4 space-y-4 sm:space-y-6 h-screen">
           <Routes>
             <Route path="/" element={<KidsView />} />
