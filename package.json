@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "local": "sh -c 'vercel dev --port 3000 & VERCEL_PID=$!; npm run dev; kill $VERCEL_PID 2>/dev/null || true; wait $VERCEL_PID 2>/dev/null || true'"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
