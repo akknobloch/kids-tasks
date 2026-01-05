@@ -25,6 +25,8 @@ function shouldReduceMotion() {
 
 function fireWithLibrary(colors: string[]) {
   const canvas = document.createElement('canvas');
+  canvas.width = window.innerWidth || 800;
+  canvas.height = window.innerHeight || 600;
   canvas.style.position = 'fixed';
   canvas.style.inset = '0';
   canvas.style.width = '100%';
@@ -36,11 +38,12 @@ function fireWithLibrary(colors: string[]) {
   const shoot = confetti.create(canvas, { resize: false, useWorker: false });
 
   shoot({
-    particleCount: 28,
+    particleCount: 24,
     spread: 55,
-    startVelocity: 34,
+    startVelocity: 26,
+    scalar: 0.6,
     origin: { x: 0.5, y: 1 },
-    ticks: 70,
+    ticks: 60,
     colors,
     disableForReducedMotion: true,
   });
@@ -73,12 +76,12 @@ function fireFallback(colors: string[]) {
   const pieces = Array.from({ length: 26 }).map(() => ({
     x: canvas.width * 0.5,
     y: canvas.height,
-    w: 6 + Math.random() * 6,
-    h: 10 + Math.random() * 8,
-    vx: (Math.random() * 2 - 1) * 1.2,
-    vy: -(6 + Math.random() * 4),
+    w: 4 + Math.random() * 3,
+    h: 6 + Math.random() * 4,
+    vx: (Math.random() * 2 - 1) * 0.9,
+    vy: -(5 + Math.random() * 3),
     rot: Math.random() * Math.PI * 2,
-    vr: (Math.random() * 4 - 2) * 0.05,
+    vr: (Math.random() * 4 - 2) * 0.04,
     color: colors[Math.floor(Math.random() * colors.length)],
   }));
 
