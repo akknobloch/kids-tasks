@@ -1,16 +1,27 @@
 // Celebration helper: shows a GIF overlay or a reduced-motion pulse.
-const GIF_URL = '/celebration.gif';
+const GIF_PATH = '/celebration.gif';
 
 let preloadImg: HTMLImageElement | null = null;
 let overlayEl: HTMLDivElement | null = null;
 let hideTimer: number | null = null;
 let removeTimer: number | null = null;
 let pulseTimer: number | null = null;
+let gifUrlCache: string | null = null;
+
+function getGifUrl() {
+  if (gifUrlCache) return gifUrlCache;
+  if (typeof window !== 'undefined') {
+    gifUrlCache = `${window.location.origin}${GIF_PATH}`;
+  } else {
+    gifUrlCache = GIF_PATH;
+  }
+  return gifUrlCache;
+}
 
 export function primeCelebration() {
   if (preloadImg) return;
   preloadImg = new Image();
-  preloadImg.src = GIF_URL;
+  preloadImg.src = getGifUrl();
 }
 
 export function triggerCelebration(doneColumnId = 'done-column') {
@@ -49,11 +60,23 @@ export function triggerCelebration(doneColumnId = 'done-column') {
   overlay.style.transition = 'transform 220ms ease, opacity 220ms ease';
 
   const img = document.createElement('img');
-  img.src = GIF_URL;
+  img.src = getGifUrl();
   img.alt = '';
   img.style.width = '100%';
   img.style.height = 'auto';
   img.style.borderRadius = '16px';
+  img.onerror = () => {
+    // Fallback visual if GIF fails to load (e.g., Safari fetch issue)
+    img.remove();
+    overlay.style.background = '#fef3c7';
+    overlay.style.borderRadius = '16px';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.fontSize = '32px';
+    overlay.textContent = '🎉';
+  };
+
   overlay.appendChild(img);
 
   document.body.appendChild(overlay);
