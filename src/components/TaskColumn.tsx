@@ -14,7 +14,7 @@ export default function TaskColumn({ id, title, tasks, accent = 'indigo' }: Task
   const areaClass = accent === 'emerald' ? 'from-white to-emerald-50/60' : 'from-white to-indigo-50/60';
 
   return (
-    <div className="flex flex-col space-y-3 h-full min-h-0">
+    <div className="flex flex-col space-y-3 h-full min-h-0" data-column-id={id}>
       <h2 className="text-2xl font-bold text-slate-800 text-center">{title}</h2>
       <div
         ref={setNodeRef}

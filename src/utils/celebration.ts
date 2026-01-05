@@ -1,0 +1,98 @@
+// Celebration helper: shows a GIF overlay or a reduced-motion pulse.
+const GIF_URL = 'https://media.giphy.com/media/oa4Au5xDZ6HJYF6KGH/giphy.gif';
+
+let preloadImg: HTMLImageElement | null = null;
+let overlayEl: HTMLDivElement | null = null;
+let hideTimer: number | null = null;
+let removeTimer: number | null = null;
+let pulseTimer: number | null = null;
+
+export function primeCelebration() {
+  if (preloadImg) return;
+  preloadImg = new Image();
+  preloadImg.src = GIF_URL;
+}
+
+export function triggerCelebration(doneColumnId = 'done-column') {
+  primeCelebration();
+
+  if (shouldReduceMotion()) {
+    pulseDoneColumn(doneColumnId);
+    return;
+  }
+
+  if (hideTimer) {
+    clearTimeout(hideTimer);
+    hideTimer = null;
+  }
+  if (removeTimer) {
+    clearTimeout(removeTimer);
+    removeTimer = null;
+  }
+  if (overlayEl && overlayEl.parentElement) {
+    overlayEl.parentElement.removeChild(overlayEl);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.right = '18px';
+  overlay.style.bottom = '18px';
+  overlay.style.width = '120px';
+  overlay.style.height = '120px';
+  overlay.style.pointerEvents = 'none';
+  overlay.style.zIndex = '10000';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'flex-end';
+  overlay.style.justifyContent = 'flex-end';
+  overlay.style.transform = 'translateY(20px)';
+  overlay.style.opacity = '0';
+  overlay.style.transition = 'transform 220ms ease, opacity 220ms ease';
+
+  const img = document.createElement('img');
+  img.src = GIF_URL;
+  img.alt = '';
+  img.style.width = '100%';
+  img.style.height = 'auto';
+  img.style.borderRadius = '16px';
+  overlay.appendChild(img);
+
+  document.body.appendChild(overlay);
+  overlayEl = overlay;
+
+  requestAnimationFrame(() => {
+    overlay.style.transform = 'translateY(0)';
+    overlay.style.opacity = '1';
+  });
+
+  hideTimer = window.setTimeout(() => {
+    overlay.style.transform = 'translateY(30px)';
+    overlay.style.opacity = '0';
+  }, 650);
+
+  removeTimer = window.setTimeout(() => {
+    if (overlay.parentElement) overlay.parentElement.removeChild(overlay);
+    if (overlayEl === overlay) overlayEl = null;
+  }, 950);
+}
+
+function pulseDoneColumn(doneColumnId: string) {
+  if (pulseTimer) {
+    clearTimeout(pulseTimer);
+    pulseTimer = null;
+  }
+  const el = document.querySelector<HTMLElement>(`[data-column-id="${doneColumnId}"]`);
+  if (!el) return;
+  el.classList.add('done-pulse');
+  pulseTimer = window.setTimeout(() => {
+    el.classList.remove('done-pulse');
+    pulseTimer = null;
+  }, 400);
+}
+
+function shouldReduceMotion() {
+  try {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+}

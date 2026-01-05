@@ -14,6 +14,7 @@ import { updateTask } from '../storage';
 import TaskColumn from './TaskColumn';
 import TaskCard from './TaskCard';
 import { fireCompletionConfetti } from '../utils/confetti';
+import { triggerCelebration } from '../utils/celebration';
 
 interface TaskBoardProps {
   kid: Kid;
@@ -67,6 +68,7 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
       onTaskUpdate?.(taskId, { isDone: true });
       playChime();
       fireCompletionConfetti(kid.color);
+      triggerCelebration('done-column');
     }
 
     if (overId === 'todo-column' && task.isDone) {

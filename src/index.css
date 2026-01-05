@@ -8,6 +8,12 @@ body {
   background-color: transparent;
 }
 
+.done-pulse {
+  transition: box-shadow 120ms ease, transform 120ms ease;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25), 0 12px 30px rgba(0, 0, 0, 0.08);
+  transform: scale(1.01);
+}
+
 /* Gap-free spacing helpers for Safari 12 */
 .wrap-spacing-2 {
   margin: -0.5rem;
