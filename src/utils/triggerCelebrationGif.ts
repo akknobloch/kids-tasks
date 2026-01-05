@@ -3,11 +3,13 @@ let hideTimer: number | null = null;
 let removeTimer: number | null = null;
 
 export function triggerCelebrationGif() {
+  console.log("Triggering celebration GIF");
   // Respect reduced motion
   if (
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
   ) {
+    console.log("Reduced motion enabled; skipping celebration GIF");
     return;
   }
 
