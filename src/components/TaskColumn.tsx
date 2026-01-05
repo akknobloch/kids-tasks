@@ -18,7 +18,7 @@ export default function TaskColumn({ id, title, tasks, accent = 'indigo' }: Task
       <h2 className="text-2xl font-bold text-slate-800 text-center">{title}</h2>
       <div
         ref={setNodeRef}
-        className={`flex-1 min-h-0 bg-gradient-to-br ${areaClass} rounded-3xl p-4 sm:p-5 shadow-inner h-full flex flex-wrap justify-center content-start items-start border border-white/70 overflow-y-auto overflow-x-hidden card-grid-flex`}
+        className={`flex-1 min-h-0 bg-gradient-to-br ${areaClass} rounded-3xl p-4 shadow-inner h-full flex flex-wrap justify-center content-start items-start border border-white/70 overflow-y-auto overflow-x-hidden card-grid-flex`}
       >
         {tasks.map(task => (
           <div key={task.id} className="card-cell">
