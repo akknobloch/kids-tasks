@@ -228,9 +228,3 @@ async function playChime() {
     // Safari 12 may block audio; fail quietly.
   }
 }
-
-function isOldSafari() {
-  if (typeof navigator === 'undefined') return false;
-  const ua = navigator.userAgent || '';
-  return /Version\/12\./.test(ua) && /Safari/.test(ua) && !/Chrome|Chromium/.test(ua);
-}
