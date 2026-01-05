@@ -1,5 +1,5 @@
 // Celebration helper: shows a GIF overlay or a reduced-motion pulse.
-const GIF_URL = 'https://media.giphy.com/media/oa4Au5xDZ6HJYF6KGH/giphy.gif';
+const GIF_URL = '/celebration.gif';
 
 let preloadImg: HTMLImageElement | null = null;
 let overlayEl: HTMLDivElement | null = null;
