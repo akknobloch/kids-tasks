@@ -13,6 +13,7 @@ import type { Kid, Task } from '../types';
 import { updateTask } from '../storage';
 import TaskColumn from './TaskColumn';
 import TaskCard from './TaskCard';
+import { fireCompletionConfetti } from '../utils/confetti';
 
 interface TaskBoardProps {
   kid: Kid;
@@ -65,7 +66,7 @@ export default function TaskBoard({ kid, tasks, onTaskUpdate }: TaskBoardProps) 
       setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isDone: true } : t));
       onTaskUpdate?.(taskId, { isDone: true });
       playChime();
-      spawnConfettiRain(kid.color);
+      fireCompletionConfetti(kid.color);
     }
 
     if (overId === 'todo-column' && task.isDone) {
@@ -144,11 +145,6 @@ function ensureEmojiStyles() {
     @keyframes emoji-fall {
       0% { transform: translateY(0) rotate(0deg); opacity: 1; }
       100% { transform: translateY(110vh) rotate(20deg); opacity: 0.7; }
-    }
-    @keyframes confetti-rain {
-      0% { transform: translate3d(0, -10px, 0) rotate(0deg); opacity: 0.95; }
-      70% { transform: translate3d(-10px, 60vh, 0) rotate(180deg); opacity: 0.95; }
-      100% { transform: translate3d(10px, 120vh, 0) rotate(360deg); opacity: 0; }
     }
   `;
   document.head.appendChild(style);
@@ -237,112 +233,4 @@ function isOldSafari() {
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent || '';
   return /Version\/12\./.test(ua) && /Safari/.test(ua) && !/Chrome|Chromium/.test(ua);
-}
-
-function spawnConfettiRain(color: string) {
-  const container = document.createElement('div');
-  container.style.position = 'fixed';
-  container.style.pointerEvents = 'none';
-  container.style.inset = '0';
-  container.style.zIndex = '9999';
-
-  const colors = [color || '#22c55e', '#ffffff', '#fbbf24', '#a5b4fc'];
-  const useJsFallback = isOldSafari();
-  const pieces: HTMLElement[] = [];
-  const viewportWidth = window.innerWidth || 800;
-
-  for (let i = 0; i < 60; i++) {
-    const piece = document.createElement('span');
-    piece.className = 'confetti-piece';
-    const size = 8 + Math.random() * 8;
-    piece.style.position = 'absolute';
-    const startX = Math.random() * viewportWidth;
-    const startY = -40 - Math.random() * 40;
-    piece.style.left = `${startX}px`;
-    piece.style.top = `${startY}px`;
-    piece.style.width = `${size}px`;
-    piece.style.height = `${size * 1.4}px`;
-    piece.style.backgroundColor = colors[i % colors.length];
-    piece.style.opacity = '0.95';
-    piece.style.borderRadius = '2px';
-    if (useJsFallback) {
-      piece.dataset.vy = (180 + Math.random() * 160).toString(); // px/s
-      piece.dataset.vx = (Math.random() * 120 - 60).toString(); // px/s
-      piece.dataset.rot = (Math.random() * 360).toString();
-    } else {
-      piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-      piece.style.animation = `confetti-rain ${900 + Math.random() * 900}ms cubic-bezier(0.25, 0.8, 0.25, 1) forwards`;
-      piece.style.animationDelay = `${Math.random() * 150}ms`;
-    }
-    pieces.push(piece);
-    container.appendChild(piece);
-  }
-
-  document.body.appendChild(container);
-
-  if (useJsFallback) {
-    runCanvasConfettiFallback(colors, container);
-  } else {
-    setTimeout(() => {
-      if (container.parentElement) container.parentElement.removeChild(container);
-    }, 1800);
-  }
-}
-
-function runCanvasConfettiFallback(colors: string[], container: HTMLElement) {
-  const canvas = document.createElement('canvas');
-  canvas.width = window.innerWidth || 800;
-  canvas.height = window.innerHeight || 600;
-  canvas.style.position = 'fixed';
-  canvas.style.inset = '0';
-  canvas.style.pointerEvents = 'none';
-  canvas.style.zIndex = '10000';
-  container.appendChild(canvas);
-  const maybeContext = canvas.getContext('2d');
-  if (!maybeContext) {
-    canvas.remove();
-    return;
-  }
-  const context: CanvasRenderingContext2D = maybeContext;
-
-  const pieces = Array.from({ length: 70 }).map(() => ({
-    x: Math.random() * canvas.width,
-    y: -Math.random() * 80,
-    w: 6 + Math.random() * 8,
-    h: 10 + Math.random() * 10,
-    vx: (Math.random() * 160 - 80) / 1000, // px/ms
-    vy: (200 + Math.random() * 240) / 1000,
-    rot: Math.random() * Math.PI * 2,
-    vr: (Math.random() * 6 - 3) * (Math.PI / 180),
-    color: colors[Math.floor(Math.random() * colors.length)],
-  }));
-
-  const start = performance.now();
-  const duration = 1600;
-
-  function frame(now: number) {
-    const elapsed = now - start;
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    for (const p of pieces) {
-      p.x += p.vx * 16;
-      p.y += p.vy * 16;
-      p.rot += p.vr;
-      if (p.y > canvas.height + 40) p.y = -20;
-      if (p.x > canvas.width + 40) p.x = -20;
-      if (p.x < -40) p.x = canvas.width + 20;
-
-      context.save();
-      context.translate(p.x, p.y);
-      context.rotate(p.rot);
-      context.fillStyle = p.color;
-      context.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-      context.restore();
-    }
-    if (elapsed < duration) {
-      requestAnimationFrame(frame);
-    } else if (canvas.parentElement) {
-      canvas.parentElement.removeChild(canvas);
-    }
-  }
-  requestAnimationFrame(frame);
 }
