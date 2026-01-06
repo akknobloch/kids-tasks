@@ -1,4 +1,4 @@
-import type { Kid, Task } from './types';
+import type { Kid, Task, Streak } from './types';
 
 const AUTH_TOKEN_KEY = 'kids-tasks-token';
 
@@ -94,4 +94,9 @@ export async function resetTasksIfNeeded(): Promise<void> {
     method: 'POST',
     body: JSON.stringify({ action: 'resetTasksIfNeeded' }),
   });
+}
+
+export async function getStreaks(): Promise<Streak[]> {
+  const data = await api<{ streaks: Streak[] }>('/api/storage');
+  return data.streaks || [];
 }

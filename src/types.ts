@@ -15,3 +15,9 @@ export interface Task {
   isDone: boolean;
   isActive: boolean;
 }
+
+export interface Streak {
+  kidId: string;
+  streakCount: number;
+  lastPerfectDate: string | null;
+}

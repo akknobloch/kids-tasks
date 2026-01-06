@@ -40,6 +40,11 @@ async function ensureTables() {
     key TEXT PRIMARY KEY,
     value TEXT
   );`;
+  await sql`CREATE TABLE IF NOT EXISTS streaks (
+    kid_id TEXT PRIMARY KEY REFERENCES kids(id) ON DELETE CASCADE,
+    streak_count INTEGER NOT NULL DEFAULT 0,
+    last_perfect_date TEXT
+  );`;
 
   // Ensure columns exist on existing tables (handles previous schema versions)
   await sql`ALTER TABLE kids ADD COLUMN IF NOT EXISTS photo_data_url TEXT DEFAULT '';`;
@@ -105,8 +110,74 @@ async function setLastResetDate(dateStr) {
 async function listData() {
   const kidsResult = await sql`SELECT id, name, color, photo_data_url AS "photoDataUrl" FROM kids ORDER BY name;`;
   const tasksResult = await sql`SELECT id, kid_id AS "kidId", title, icon_type AS "iconType", icon_value AS "iconValue", "order", is_done AS "isDone", is_active AS "isActive" FROM tasks;`;
+  const streaksResult = await sql`SELECT kid_id AS "kidId", streak_count AS "streakCount", last_perfect_date AS "lastPerfectDate" FROM streaks;`;
   const lastResetDate = await getLastResetDate();
-  return { kids: kidsResult.rows, tasks: tasksResult.rows, lastResetDate };
+  return { kids: kidsResult.rows, tasks: tasksResult.rows, lastResetDate, streaks: streaksResult.rows };
+}
+
+function toUtcDate(dateStr) {
+  return new Date(`${dateStr}T00:00:00Z`);
+}
+
+function dayDiff(prev, current) {
+  if (!prev || !current) return null;
+  const prevDate = toUtcDate(prev);
+  const currentDate = toUtcDate(current);
+  const diffMs = currentDate - prevDate;
+  return Math.round(diffMs / (1000 * 60 * 60 * 24));
+}
+
+async function recordStreaksForDate(dateStr) {
+  const { rows: kids } = await sql`SELECT id FROM kids;`;
+
+  for (const kid of kids) {
+    const { rows: countsRows } = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE is_active) AS "activeCount",
+        COUNT(*) FILTER (WHERE is_active AND is_done) AS "doneCount"
+      FROM tasks
+      WHERE kid_id = ${kid.id};
+    `;
+
+    const activeCount = Number(countsRows[0]?.activeCount || 0);
+    const doneCount = Number(countsRows[0]?.doneCount || 0);
+    if (activeCount === 0) continue; // nothing to count toward streaks
+
+    if (activeCount === doneCount) {
+      const { rows: streakRows } = await sql`
+        SELECT streak_count AS "streakCount", last_perfect_date AS "lastPerfectDate"
+        FROM streaks
+        WHERE kid_id = ${kid.id};
+      `;
+      const current = streakRows[0];
+      let nextCount = 1;
+
+      if (current) {
+        if (current.lastPerfectDate === dateStr) {
+          nextCount = current.streakCount;
+        } else {
+          const diff = dayDiff(current.lastPerfectDate, dateStr);
+          nextCount = diff === 1 ? current.streakCount + 1 : 1;
+        }
+      }
+
+      await sql`
+        INSERT INTO streaks (kid_id, streak_count, last_perfect_date)
+        VALUES (${kid.id}, ${nextCount}, ${dateStr})
+        ON CONFLICT (kid_id) DO UPDATE
+        SET streak_count = EXCLUDED.streak_count,
+            last_perfect_date = EXCLUDED.last_perfect_date;
+      `;
+    } else {
+      await sql`
+        INSERT INTO streaks (kid_id, streak_count, last_perfect_date)
+        VALUES (${kid.id}, 0, NULL)
+        ON CONFLICT (kid_id) DO UPDATE
+        SET streak_count = 0,
+            last_perfect_date = NULL;
+      `;
+    }
+  }
 }
 
 export default async function handler(req, res) {
@@ -183,6 +254,8 @@ export default async function handler(req, res) {
         const today = new Date().toISOString().split('T')[0];
         const last = await getLastResetDate();
         if (last !== today) {
+          const creditDate = last || today;
+          await recordStreaksForDate(creditDate);
           await sql`UPDATE tasks SET is_done = FALSE;`;
           await setLastResetDate(today);
         }
