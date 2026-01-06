@@ -58,7 +58,11 @@ export function triggerMinionFlood() {
 
   const container = document.createElement('div');
   container.style.position = 'fixed';
-  container.style.inset = '0';
+  container.style.top = '0';
+  container.style.right = '0';
+  container.style.bottom = '0';
+  container.style.left = '0';
+  container.style.inset = '0'; // inset is ignored on Safari 12, so set sides too
   container.style.overflow = 'hidden';
   container.style.zIndex = '2147483647';
   container.style.pointerEvents = 'none';

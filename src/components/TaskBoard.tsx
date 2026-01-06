@@ -124,6 +124,10 @@ function rainEmojis(emoji: string, tint: string) {
   const container = document.createElement('div');
   container.style.position = 'fixed';
   container.style.pointerEvents = 'none';
+  container.style.top = '0';
+  container.style.right = '0';
+  container.style.bottom = '0';
+  container.style.left = '0';
   container.style.inset = '0';
   container.style.zIndex = '9999';
 

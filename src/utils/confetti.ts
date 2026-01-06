@@ -9,6 +9,10 @@ export function fireCompletionConfetti(primaryColor?: string) {
   canvas.width = window.innerWidth || 800;
   canvas.height = window.innerHeight || 600;
   canvas.style.position = 'fixed';
+  canvas.style.top = '0';
+  canvas.style.right = '0';
+  canvas.style.bottom = '0';
+  canvas.style.left = '0';
   canvas.style.inset = '0';
   canvas.style.pointerEvents = 'none';
   canvas.style.zIndex = '9999';
