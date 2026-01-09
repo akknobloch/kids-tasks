@@ -1,18 +1,24 @@
-import { useEffect, useState } from 'react';
-import { getKids, addKid, updateKid, deleteKid } from '../../storage';
-import type { Kid } from '../../types';
+import { useEffect, useMemo, useState } from 'react';
+import { getKids, addKid, updateKid, deleteKid, getStreaks } from '../../storage';
+import type { Kid, Streak } from '../../types';
 import KidForm from './KidForm';
 import ConfirmDialog from './ConfirmDialog';
 
 export default function KidsAdmin() {
   const [kids, setKids] = useState<Kid[]>([]);
+  const [streaks, setStreaks] = useState<Streak[]>([]);
   const [editingKid, setEditingKid] = useState<Kid | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [deletingKid, setDeletingKid] = useState<Kid | null>(null);
+  const streakByKid = useMemo(
+    () => new Map(streaks.map(streak => [streak.kidId, streak])),
+    [streaks],
+  );
 
   const refreshKids = async () => {
-    const data = await getKids();
-    setKids(data);
+    const [kidsData, streakData] = await Promise.all([getKids(), getStreaks()]);
+    setKids(kidsData);
+    setStreaks(streakData);
   };
 
   useEffect(() => {
@@ -79,6 +85,9 @@ export default function KidsAdmin() {
                 </div>
                 <div>
                   <h3 className="font-medium">{kid.name}</h3>
+                  <div className="text-xs text-slate-500">
+                    Current: {streakByKid.get(kid.id)?.streakCount ?? 0} • Longest: {streakByKid.get(kid.id)?.longestStreak ?? 0}
+                  </div>
                 </div>
               </div>
               <div className="flex space-x-3">

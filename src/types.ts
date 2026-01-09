@@ -20,4 +20,5 @@ export interface Streak {
   kidId: string;
   streakCount: number;
   lastPerfectDate: string | null;
+  longestStreak: number;
 }

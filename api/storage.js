@@ -43,7 +43,8 @@ async function ensureTables() {
   await sql`CREATE TABLE IF NOT EXISTS streaks (
     kid_id TEXT PRIMARY KEY REFERENCES kids(id) ON DELETE CASCADE,
     streak_count INTEGER NOT NULL DEFAULT 0,
-    last_perfect_date TEXT
+    last_perfect_date TEXT,
+    longest_streak INTEGER NOT NULL DEFAULT 0
   );`;
 
   // Ensure columns exist on existing tables (handles previous schema versions)
@@ -55,12 +56,14 @@ async function ensureTables() {
   await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS "order" INTEGER DEFAULT 1;`;
   await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS is_done BOOLEAN DEFAULT FALSE;`;
   await sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;`;
+  await sql`ALTER TABLE streaks ADD COLUMN IF NOT EXISTS longest_streak INTEGER DEFAULT 0;`;
 
   // Normalize any nulls from older rows
   await sql`UPDATE kids SET photo_data_url = '' WHERE photo_data_url IS NULL;`;
   await sql`UPDATE tasks SET is_done = FALSE WHERE is_done IS NULL;`;
   await sql`UPDATE tasks SET is_active = TRUE WHERE is_active IS NULL;`;
   await sql`UPDATE tasks SET "order" = 1 WHERE "order" IS NULL;`;
+  await sql`UPDATE streaks SET longest_streak = 0 WHERE longest_streak IS NULL;`;
 }
 
 async function seedIfEmpty() {
@@ -110,7 +113,7 @@ async function setLastResetDate(dateStr) {
 async function listData() {
   const kidsResult = await sql`SELECT id, name, color, photo_data_url AS "photoDataUrl" FROM kids ORDER BY name;`;
   const tasksResult = await sql`SELECT id, kid_id AS "kidId", title, icon_type AS "iconType", icon_value AS "iconValue", "order", is_done AS "isDone", is_active AS "isActive" FROM tasks;`;
-  const streaksResult = await sql`SELECT kid_id AS "kidId", streak_count AS "streakCount", last_perfect_date AS "lastPerfectDate" FROM streaks;`;
+  const streaksResult = await sql`SELECT kid_id AS "kidId", streak_count AS "streakCount", last_perfect_date AS "lastPerfectDate", longest_streak AS "longestStreak" FROM streaks;`;
   const lastResetDate = await getLastResetDate();
   return { kids: kidsResult.rows, tasks: tasksResult.rows, lastResetDate, streaks: streaksResult.rows };
 }
@@ -152,12 +155,13 @@ async function updateStreakIfPerfect(kidId, dateStr) {
   if (activeCount === 0 || activeCount !== doneCount) return;
 
   const { rows: streakRows } = await sql`
-    SELECT streak_count AS "streakCount", last_perfect_date AS "lastPerfectDate"
+    SELECT streak_count AS "streakCount", last_perfect_date AS "lastPerfectDate", longest_streak AS "longestStreak"
     FROM streaks
     WHERE kid_id = ${kidId};
   `;
   const current = streakRows[0];
   let nextCount = 1;
+  let nextLongest = 1;
 
   if (current) {
     if (current.lastPerfectDate === dateStr) {
@@ -166,14 +170,16 @@ async function updateStreakIfPerfect(kidId, dateStr) {
       const diff = dayDiff(current.lastPerfectDate, dateStr);
       nextCount = diff === 1 ? current.streakCount + 1 : 1;
     }
+    nextLongest = Math.max(current.longestStreak || 0, nextCount);
   }
 
   await sql`
-    INSERT INTO streaks (kid_id, streak_count, last_perfect_date)
-    VALUES (${kidId}, ${nextCount}, ${dateStr})
+    INSERT INTO streaks (kid_id, streak_count, last_perfect_date, longest_streak)
+    VALUES (${kidId}, ${nextCount}, ${dateStr}, ${nextLongest})
     ON CONFLICT (kid_id) DO UPDATE
     SET streak_count = EXCLUDED.streak_count,
-        last_perfect_date = EXCLUDED.last_perfect_date;
+        last_perfect_date = EXCLUDED.last_perfect_date,
+        longest_streak = EXCLUDED.longest_streak;
   `;
 }
 
@@ -255,7 +261,7 @@ export default async function handler(req, res) {
         const today = getCstDateStr();
         const last = await getLastResetDate();
         if (last !== today) {
-          await sql`UPDATE tasks SET is_done = FALSE;`;
+          await sql`UPDATE tasks SET is_done = FALSE, is_active = FALSE;`;
           await setLastResetDate(today);
         }
         return res.status(200).json({ success: true });
