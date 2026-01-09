@@ -39,6 +39,7 @@ export default function KidsView() {
   );
 
   const todayLabel = new Date().toLocaleDateString('en-US', {
+    timeZone: 'America/Chicago',
     weekday: 'long',
     month: 'long',
     day: 'numeric',
