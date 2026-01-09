@@ -73,13 +73,22 @@ export default function KidsView() {
             onSelectKid={setSelectedKidId}
           />
           <div className="flex-1 min-h-[260px]">
-            <TaskBoard
-              kid={selectedKid}
-              tasks={tasks.filter(t => t.kidId === selectedKid.id && t.isActive)}
-              onTaskUpdate={(id, updates) => {
-                setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
-              }}
-            />
+            {tasks.some(t => t.kidId === selectedKid.id && t.isActive) ? (
+              <TaskBoard
+                kid={selectedKid}
+                tasks={tasks.filter(t => t.kidId === selectedKid.id && t.isActive)}
+                onTaskUpdate={(id, updates) => {
+                  setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+                }}
+              />
+            ) : (
+              <div className="soft-card rounded-3xl p-6 sm:p-8 flex items-center justify-center text-center h-full">
+                <div className="space-y-3 opacity-80">
+                  <div className="text-6xl sm:text-7xl opacity-80" role="img" aria-hidden="true">🎉</div>
+                  <div className="text-base sm:text-lg font-semibold text-slate-400">You don’t have any tasks to do today!</div>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
