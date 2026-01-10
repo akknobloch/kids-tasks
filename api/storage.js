@@ -261,9 +261,8 @@ export default async function handler(req, res) {
         const today = getCstDateStr();
         const last = await getLastResetDate();
         if (last !== today) {
-          await sql`UPDATE tasks
-            SET is_done = FALSE,
-                is_active = CASE WHEN is_done THEN FALSE ELSE is_active END;`;
+          await sql`UPDATE tasks SET is_active = FALSE WHERE is_done = TRUE;`;
+          await sql`UPDATE tasks SET is_done = FALSE;`;
           await setLastResetDate(today);
         }
         return res.status(200).json({ success: true });
