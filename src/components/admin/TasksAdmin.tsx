@@ -77,6 +77,18 @@ export default function TasksAdmin() {
 
   return (
     <div>
+      <div className="soft-card night-card rounded-xl px-4 py-3 mb-8 text-sm text-slate-600">
+        <div className="flex items-start gap-3">
+          <span className="text-xl" role="img" aria-hidden="true">🌙</span>
+          <div>
+            <div className="font-medium text-slate-700 my-1">Nightly reset</div>
+            <div>
+              At 12:00am CST, all tasks in TO DO stay active, but any tasks in
+              DONE are marked inactive. This helps keep the task list fresh each day!
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="mb-6">
         <KidSwitcher
           kids={kids}

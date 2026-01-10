@@ -13,6 +13,11 @@
   border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
+.soft-card.night-card {
+  background: rgba(226, 232, 240, 0.8);
+  border-color: rgba(203, 213, 225, 0.7);
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
